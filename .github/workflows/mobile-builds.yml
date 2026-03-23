@@ -1,0 +1,124 @@
+# ─── RoadReady Mobile Build Pipeline ─────────────────────────────────────────
+# Triggers:
+#   push to main        → production build (submits to stores)
+#   push to staging     → preview/internal build (internal testers only)
+#   manual dispatch     → choose app + profile
+#
+# Secrets required:
+#   EXPO_TOKEN          — from expo.dev account settings
+#   APPLE_ID            — your Apple ID email
+#   APPLE_TEAM_ID       — from developer.apple.com
+#   ASC_APP_ID_MOTORIST — App Store Connect app ID (motorist)
+#   ASC_APP_ID_PROVIDER — App Store Connect app ID (provider)
+
+name: Mobile Builds (EAS)
+
+on:
+  push:
+    branches: [main, staging]
+    paths:
+      - 'motorist-app/**'
+      - 'provider-app/**'
+      - 'shared/**'
+  workflow_dispatch:
+    inputs:
+      app:
+        description: Which app to build
+        required: true
+        type: choice
+        options: [motorist, provider, both]
+      profile:
+        description: Build profile
+        required: true
+        type: choice
+        options: [development, preview, production]
+
+jobs:
+
+  # ── Build Motorist App ────────────────────────────────────────────────────────
+  build-motorist:
+    name: Build Motorist App
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.app == 'motorist' || inputs.app == 'both'))
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        working-directory: motorist-app
+        run: npm install
+
+      - name: Build (Production)
+        if: github.ref == 'refs/heads/main' || inputs.profile == 'production'
+        working-directory: motorist-app
+        run: eas build --platform all --profile production --non-interactive --no-wait
+
+      - name: Build (Preview)
+        if: github.ref == 'refs/heads/staging' || inputs.profile == 'preview'
+        working-directory: motorist-app
+        run: eas build --platform android --profile preview --non-interactive --no-wait
+
+      - name: Build (Development)
+        if: inputs.profile == 'development'
+        working-directory: motorist-app
+        run: eas build --platform android --profile development --non-interactive --no-wait
+
+  # ── Build Provider App ────────────────────────────────────────────────────────
+  build-provider:
+    name: Build Provider App
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' &&
+       (inputs.app == 'provider' || inputs.app == 'both'))
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        working-directory: provider-app
+        run: npm install
+
+      - name: Build (Production)
+        if: github.ref == 'refs/heads/main' || inputs.profile == 'production'
+        working-directory: provider-app
+        run: eas build --platform all --profile production --non-interactive --no-wait
+
+      - name: Build (Preview)
+        if: github.ref == 'refs/heads/staging' || inputs.profile == 'preview'
+        working-directory: provider-app
+        run: eas build --platform android --profile preview --non-interactive --no-wait
+
+      - name: Build (Development)
+        if: inputs.profile == 'development'
+        working-directory: provider-app
+        run: eas build --platform android --profile development --non-interactive --no-wait

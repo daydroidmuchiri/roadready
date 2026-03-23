@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment files — NEVER commit these
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Secrets — NEVER commit these
+firebase-service-account.json
+google-services.json
+GoogleService-Info.plist
+google-play-service-account.json
+*.p8
+*.p12
+*.jks
+*.keystore
+
+# Build outputs
+dist/
+build/
+.next/
+.expo/
+ios/
+android/
+
+# EAS local files
+eas-local.json
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary
+tmp/
+temp/

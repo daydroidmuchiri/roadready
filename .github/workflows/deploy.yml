@@ -1,0 +1,201 @@
+# ─── RoadReady CI/CD Pipeline ────────────────────────────────────────────────
+# Triggers:
+#   push to main    → deploy backend + admin to PRODUCTION
+#   push to staging → deploy backend + admin to STAGING
+#   pull request    → run tests only (no deploy)
+#
+# Secrets required (Settings → Secrets → Actions):
+#   RAILWAY_TOKEN             — from railway.app account settings
+#   RAILWAY_SERVICE_ID        — from Railway service settings
+#   RAILWAY_SERVICE_ID_STAGING — staging service ID
+#   VERCEL_TOKEN              — from vercel.com account settings
+#   VERCEL_ORG_ID             — from Vercel project settings
+#   VERCEL_PROJECT_ID         — from Vercel project settings
+#   DATABASE_URL_TEST         — test database (separate from prod)
+#   JWT_SECRET_TEST           — any string, used for tests only
+#   ANTHROPIC_API_KEY         — for tests that call AI endpoints
+
+name: RoadReady CI/CD
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+env:
+  NODE_VERSION: '20'
+
+# ─── Jobs ─────────────────────────────────────────────────────────────────────
+
+jobs:
+
+  # ── 1. Backend Tests ─────────────────────────────────────────────────────────
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER:     roadready
+          POSTGRES_PASSWORD: testpassword
+          POSTGRES_DB:       roadready_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run database migrations
+        working-directory: backend
+        env:
+          DATABASE_URL:      postgresql://roadready:testpassword@localhost:5432/roadready_test
+          NODE_ENV:          test
+          JWT_SECRET:        test-secret-not-for-production
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SMS_DRY_RUN:       'true'
+        run: npm run migrate
+
+      - name: Run tests
+        working-directory: backend
+        env:
+          DATABASE_URL:      postgresql://roadready:testpassword@localhost:5432/roadready_test
+          NODE_ENV:          test
+          JWT_SECRET:        test-secret-not-for-production
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SMS_DRY_RUN:       'true'
+        run: npm test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: backend/coverage/
+
+  # ── 2. Deploy Backend to Railway ─────────────────────────────────────────────
+  deploy-backend:
+    name: Deploy Backend
+    needs: test-backend
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway (Production)
+        if: github.ref == 'refs/heads/main'
+        working-directory: backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway link ${{ secrets.RAILWAY_SERVICE_ID }}
+          railway up --service ${{ secrets.RAILWAY_SERVICE_ID }} --detach
+
+      - name: Deploy to Railway (Staging)
+        if: github.ref == 'refs/heads/staging'
+        working-directory: backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway link ${{ secrets.RAILWAY_SERVICE_ID_STAGING }}
+          railway up --service ${{ secrets.RAILWAY_SERVICE_ID_STAGING }} --detach
+
+      - name: Wait for deployment and health check
+        run: |
+          echo "Waiting 30s for Railway to deploy..."
+          sleep 30
+          URL="${{ github.ref == 'refs/heads/main' && 'https://roadready-api.railway.app' || 'https://roadready-api-staging.railway.app' }}"
+          for i in {1..10}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL/health")
+            if [ "$STATUS" = "200" ]; then
+              echo "✓ Health check passed (attempt $i)"
+              exit 0
+            fi
+            echo "Attempt $i: got $STATUS, retrying in 15s..."
+            sleep 15
+          done
+          echo "✗ Health check failed after 10 attempts"
+          exit 1
+
+  # ── 3. Deploy Admin to Vercel ─────────────────────────────────────────────────
+  deploy-admin:
+    name: Deploy Admin Dashboard
+    needs: test-backend
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Install admin dependencies
+        working-directory: admin
+        run: npm ci
+
+      - name: Deploy to Vercel (Production)
+        if: github.ref == 'refs/heads/main'
+        working-directory: admin
+        env:
+          VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel --prod --token $VERCEL_TOKEN
+
+      - name: Deploy to Vercel (Preview / Staging)
+        if: github.ref == 'refs/heads/staging'
+        working-directory: admin
+        env:
+          VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: vercel --token $VERCEL_TOKEN
+
+  # ── 4. Notify on failure ──────────────────────────────────────────────────────
+  notify-failure:
+    name: Notify on Failure
+    needs: [test-backend, deploy-backend, deploy-admin]
+    runs-on: ubuntu-latest
+    if: failure() && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Send failure SMS via Africa's Talking
+        # In production you'd use a Slack webhook or PagerDuty instead.
+        # This is just a placeholder for alerting.
+        run: |
+          echo "Deployment failed for commit ${{ github.sha }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "Author: ${{ github.actor }}"

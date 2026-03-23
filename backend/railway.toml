@@ -1,0 +1,22 @@
+# ─── railway.toml ───────────────────────────────────────────────────────────
+# Railway reads this file from your repo root (or backend/ folder).
+# Place this at: roadready/backend/railway.toml
+#
+# Docs: https://docs.railway.app/reference/config-as-code
+
+[build]
+builder       = "NIXPACKS"
+buildCommand  = "npm install --production"
+
+[deploy]
+startCommand  = "npm run migrate && npm start"
+restartPolicyType   = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+# Health check — Railway polls this endpoint every 30s
+# If it returns non-2xx 3 times in a row, Railway restarts the service
+healthcheckPath    = "/health"
+healthcheckTimeout = 15
+
+[[services]]
+name = "roadready-api"

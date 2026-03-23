@@ -1,0 +1,12 @@
+node_modules/
+.env
+*.env.local
+*.env.production
+firebase-service-account.json
+google-services.json
+*.log
+npm-debug.log*
+.DS_Store
+dist/
+coverage/
+.nyc_output/

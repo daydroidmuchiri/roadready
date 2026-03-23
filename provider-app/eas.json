@@ -1,0 +1,61 @@
+{
+  "cli": {
+    "version": ">= 7.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://localhost:3001",
+        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "YOUR_DEV_MAPS_KEY",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://your_key@sentry.io/your_project_id"
+      },
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "channel": "preview",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://roadready-api-staging.railway.app",
+        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "YOUR_STAGING_MAPS_KEY",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://your_key@sentry.io/your_project_id"
+      },
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://roadready-api.railway.app",
+        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "YOUR_PROD_MAPS_KEY",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://your_key@sentry.io/your_project_id"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "draft"
+      },
+      "ios": {
+        "appleId": "YOUR_APPLE_ID@email.com",
+        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
+        "appleTeamId": "YOUR_APPLE_TEAM_ID"
+      }
+    }
+  }
+}
