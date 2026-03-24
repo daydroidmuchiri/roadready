@@ -9,10 +9,10 @@
  *   - Token stored in localStorage, refreshed on expiry
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend,
+  ResponsiveContainer, LineChart, Line,
 } from 'recharts';
 import { io } from 'socket.io-client';
 
@@ -461,7 +461,7 @@ export default function AdminApp() {
         })
         .catch(() => {});
     }
-  }, []);
+  }, [adminUser]);
   const [page,        setPage]        = useState('map');
   const [jobs,        setJobs]        = useState([]);
   const [providers,   setProviders]   = useState([]);
