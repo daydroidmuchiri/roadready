@@ -9,7 +9,7 @@ builder       = "NIXPACKS"
 buildCommand  = "npm install --production"
 
 [deploy]
-startCommand  = "npm run migrate && npm start"
+startCommand  = "npm start"
 restartPolicyType   = "ON_FAILURE"
 restartPolicyMaxRetries = 5
 
