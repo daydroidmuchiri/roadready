@@ -653,6 +653,19 @@ async function start() {
       nodeVersion: process.version,
       timestamp: new Date().toISOString(),
     }));
+
+    // Run DB migrations AFTER the server starts listening so /health is
+    // reachable immediately (Railway healthcheck won't block on migrations).
+    const { execFile } = require('child_process');
+    execFile('node', ['db/migrate.js'], { cwd: __dirname }, (err, stdout, stderr) => {
+      if (stdout) console.log('[MIGRATE]', stdout.trim());
+      if (stderr) console.error('[MIGRATE]', stderr.trim());
+      if (err) {
+        console.error(JSON.stringify({ level: 'ERROR', event: 'migration_failed', message: err.message }));
+      } else {
+        console.log(JSON.stringify({ level: 'INFO', event: 'migrations_complete' }));
+      }
+    });
   });
 
   // ── Graceful shutdown ─────────────────────────────────────────────────────
