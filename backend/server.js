@@ -87,6 +87,9 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
+// Healthcheck for Railway / Render / Fly — must respond before DB is ready
+app.get('/health', (_req, res) => res.status(200).json({ status: 'ok', ts: Date.now() }));
+
 // ─── Rate Limiters ────────────────────────────────────────────────────────────
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, max: 200, standardHeaders: true, legacyHeaders: false,

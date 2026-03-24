@@ -239,7 +239,7 @@ function registerProcessHandlers() {
 // Call before server.listen() — crashes loudly if config is missing.
 
 function validateEnv() {
-  const required = ['JWT_SECRET', 'ANTHROPIC_API_KEY', 'DATABASE_URL'];
+  const required = ['JWT_SECRET', 'DATABASE_URL'];
   const missing  = required.filter(k => !process.env[k]);
 
   if (missing.length > 0) {
