@@ -18,10 +18,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
-          "color": "#E8631A",
-          "defaultChannel": "job_updates",
-          "sounds": []
+          "defaultChannel": "job_updates"
         }
       ],
       [
@@ -70,8 +67,14 @@
     },
     "extra": {
       "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID"
+        "projectId": "ebebb12a-ec1c-49f6-b274-a589567fead2"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/ebebb12a-ec1c-49f6-b274-a589567fead2"
     }
   }
 }

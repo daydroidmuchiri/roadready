@@ -18,12 +18,7 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/notification-icon.png",
-          "color": "#E8631A",
-          "defaultChannel": "job_alerts",
-          "sounds": [
-            "./assets/sounds/job_alert.wav"
-          ]
+          "defaultChannel": "job_alerts"
         }
       ],
       "expo-task-manager",
@@ -64,7 +59,9 @@
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_BACKGROUND_LOCATION",
-        "android.permission.POST_NOTIFICATIONS"
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ],
       "googleServicesFile": "./google-services.json",
       "config": {
@@ -75,7 +72,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID"
+        "projectId": "7c9347c3-5cc4-490d-9570-392d09a6d455"
       }
     }
   }
