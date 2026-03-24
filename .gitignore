@@ -12,9 +12,6 @@ node_modules/
 *.env
 
 # Secrets — NEVER commit these
-firebase-service-account.json
-google-services.json
-GoogleService-Info.plist
 google-play-service-account.json
 *.p8
 *.p12

@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "927439531082",
+    "project_id": "roadready-c883e",
+    "storage_bucket": "roadready-c883e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:927439531082:android:3d8a37a5105afe2fa04ab3",
+        "android_client_info": {
+          "package_name": "co.ke.roadready.motorist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPo9OT8AjLD6iO_ECa-YZxi0XiN_0bUuc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:927439531082:android:ccbd9bba53b9f772a04ab3",
+        "android_client_info": {
+          "package_name": "co.ke.roadready.provider"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPo9OT8AjLD6iO_ECa-YZxi0XiN_0bUuc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
