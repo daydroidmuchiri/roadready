@@ -4,13 +4,7 @@
     "slug": "roadready-motorist",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#060F1C"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -47,10 +41,6 @@
     },
     "android": {
       "package": "co.ke.roadready.motorist",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#060F1C"
-      },
       "permissions": [
         "android.permission.RECEIVE_BOOT_COMPLETED",
         "android.permission.VIBRATE",
