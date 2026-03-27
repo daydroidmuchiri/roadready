@@ -1,0 +1,10 @@
+﻿Starting Metro Bundler
+Android Bundled 38795ms D:\roadready\provider-app\App.js (1002 modules)
+
+Exporting 1 bundle for android:
+_expo/static/js/android/App-9c28f039431fb1315530f36700e016e0.hbc (2.99 MB)
+
+Exporting 1 file:
+metadata.json (148 B)
+
+App exported to: d:\roadready\provider-app\dist

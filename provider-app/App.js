@@ -13,7 +13,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, ScrollView,
-  Switch, Animated, Modal, SafeAreaView, Alert, ActivityIndicator,
+  Switch, Animated, Modal, SafeAreaView, Alert, ActivityIndicator, TextInput,
 } from 'react-native';
 import { io } from 'socket.io-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';

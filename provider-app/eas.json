@@ -9,8 +9,7 @@
       "distribution": "internal",
       "env": {
         "EXPO_PUBLIC_API_URL": "http://localhost:3001",
-        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "YOUR_DEV_MAPS_KEY",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://your_key@sentry.io/your_project_id"
+        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "YOUR_DEV_MAPS_KEY"
       },
       "android": {
         "buildType": "apk"
@@ -24,8 +23,7 @@
       "channel": "preview",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://roadready-api-staging.railway.app",
-        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "YOUR_STAGING_MAPS_KEY",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://your_key@sentry.io/your_project_id"
+        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "YOUR_STAGING_MAPS_KEY"
       },
       "android": {
         "buildType": "apk"
@@ -36,8 +34,7 @@
       "channel": "production",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://roadready-api.railway.app",
-        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyAMNMJP1fmh3Ro4SC4TMH5BaK4cMR3uVy4",
-        "EXPO_PUBLIC_SENTRY_DSN": "https://your_key@sentry.io/your_project_id"
+        "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyAMNMJP1fmh3Ro4SC4TMH5BaK4cMR3uVy4"
       },
       "android": {
         "buildType": "app-bundle"

@@ -1,0 +1,397 @@
+﻿Activity Resolver Table:
+  Schemes:
+      exp+roadready-provider:
+        8fec28e co.ke.roadready.provider/.MainActivity filter f3f4ebc
+          Action: "android.intent.action.VIEW"
+          Category: "android.intent.category.DEFAULT"
+          Category: "android.intent.category.BROWSABLE"
+          Scheme: "co.ke.roadready.provider"
+          Scheme: "exp+roadready-provider"
+      co.ke.roadready.provider:
+        8fec28e co.ke.roadready.provider/.MainActivity filter f3f4ebc
+          Action: "android.intent.action.VIEW"
+          Category: "android.intent.category.DEFAULT"
+          Category: "android.intent.category.BROWSABLE"
+          Scheme: "co.ke.roadready.provider"
+          Scheme: "exp+roadready-provider"
+
+  Non-Data Actions:
+      android.intent.action.MAIN:
+        8fec28e co.ke.roadready.provider/.MainActivity filter b944aaf
+          Action: "android.intent.action.MAIN"
+          Category: "android.intent.category.LAUNCHER"
+
+Receiver Resolver Table:
+  Non-Data Actions:
+      android.intent.action.BATTERY_OKAY:
+        2c6b0fd co.ke.roadready.provider/androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryNotLowProxy filter 934a1f2
+          Action: "android.intent.action.BATTERY_OKAY"
+          Action: "android.intent.action.BATTERY_LOW"
+      android.intent.action.ACTION_POWER_DISCONNECTED:
+        25ce0a7 co.ke.roadready.provider/androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryChargingProxy filter 628b954
+          Action: "android.intent.action.ACTION_POWER_DISCONNECTED"
+          Action: "android.intent.action.ACTION_POWER_CONNECTED"
+      android.intent.action.QUICKBOOT_POWERON:
+        959fe45 co.ke.roadready.provider/expo.modules.notifications.service.NotificationsService filter 528799a
+          Action: "android.intent.action.QUICKBOOT_POWERON"
+          Action: "com.htc.intent.action.QUICKBOOT_POWERON"
+          Action: "expo.modules.notifications.NOTIFICATION_EVENT"
+          Action: "android.intent.action.BOOT_COMPLETED"
+          Action: "android.intent.action.MY_PACKAGE_REPLACED"
+          Action: "android.intent.action.REBOOT"
+          mPriority=-1, mOrder=0, mHasStaticPartialTypes=false, mHasDynamicPartialTypes=false
+      com.htc.intent.action.QUICKBOOT_POWERON:
+        959fe45 co.ke.roadready.provider/expo.modules.notifications.service.NotificationsService filter 528799a
+          Action: "android.intent.action.QUICKBOOT_POWERON"
+          Action: "com.htc.intent.action.QUICKBOOT_POWERON"
+          Action: "expo.modules.notifications.NOTIFICATION_EVENT"
+          Action: "android.intent.action.BOOT_COMPLETED"
+          Action: "android.intent.action.MY_PACKAGE_REPLACED"
+          Action: "android.intent.action.REBOOT"
+          mPriority=-1, mOrder=0, mHasStaticPartialTypes=false, mHasDynamicPartialTypes=false
+      androidx.profileinstaller.action.SAVE_PROFILE:
+        d4b1531 co.ke.roadready.provider/androidx.profileinstaller.ProfileInstallReceiver filter 9971f84
+          Action: "androidx.profileinstaller.action.SAVE_PROFILE"
+      android.intent.action.DEVICE_STORAGE_LOW:
+        7ece043 co.ke.roadready.provider/androidx.work.impl.background.systemalarm.ConstraintProxy$StorageNotLowProxy filter 30216c0
+          Action: "android.intent.action.DEVICE_STORAGE_LOW"
+          Action: "android.intent.action.DEVICE_STORAGE_OK"
+      android.net.conn.CONNECTIVITY_CHANGE:
+        3525ff9 co.ke.roadready.provider/androidx.work.impl.background.systemalarm.ConstraintProxy$NetworkStateProxy filter 6e6eb3e
+          Action: "android.net.conn.CONNECTIVITY_CHANGE"
+      expo.modules.taskManager.TaskBroadcastReceiver.INTENT_ACTION:
+        e64e2cb co.ke.roadready.provider/expo.modules.taskManager.TaskBroadcastReceiver filter 2109aa8
+          Action: "expo.modules.taskManager.TaskBroadcastReceiver.INTENT_ACTION"
+          Action: "android.intent.action.BOOT_COMPLETED"
+          Action: "android.intent.action.MY_PACKAGE_REPLACED"
+      expo.modules.notifications.NOTIFICATION_EVENT:
+        959fe45 co.ke.roadready.provider/expo.modules.notifications.service.NotificationsService filter 528799a
+          Action: "android.intent.action.QUICKBOOT_POWERON"
+          Action: "com.htc.intent.action.QUICKBOOT_POWERON"
+          Action: "expo.modules.notifications.NOTIFICATION_EVENT"
+          Action: "android.intent.action.BOOT_COMPLETED"
+          Action: "android.intent.action.MY_PACKAGE_REPLACED"
+          Action: "android.intent.action.REBOOT"
+          mPriority=-1, mOrder=0, mHasStaticPartialTypes=false, mHasDynamicPartialTypes=false
+      android.intent.action.DEVICE_STORAGE_OK:
+        7ece043 co.ke.roadready.provider/androidx.work.impl.background.systemalarm.ConstraintProxy$StorageNotLowProxy filter 30216c0
+          Action: "android.intent.action.DEVICE_STORAGE_LOW"
+          Action: "android.intent.action.DEVICE_STORAGE_OK"
+      androidx.profileinstaller.action.INSTALL_PROFILE:
+        d4b1531 co.ke.roadready.provider/androidx.profileinstaller.ProfileInstallReceiver filter e532416
+          Action: "androidx.profileinstaller.action.INSTALL_PROFILE"
+      com.google.android.c2dm.intent.RECEIVE:
+        62139c1 co.ke.roadready.provider/com.google.firebase.iid.FirebaseInstanceIdReceiver filter 8049566
+          Action: "com.google.android.c2dm.intent.RECEIVE"
+      android.intent.action.BATTERY_LOW:
+        2c6b0fd co.ke.roadready.provider/androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryNotLowProxy filter 934a1f2
+          Action: "android.intent.action.BATTERY_OKAY"
+          Action: "android.intent.action.BATTERY_LOW"
+      android.intent.action.TIMEZONE_CHANGED:
+        bf33d9f co.ke.roadready.provider/androidx.work.impl.background.systemalarm.RescheduleReceiver filter b51deec
+          Action: "android.intent.action.TIMEZONE_CHANGED"
+          Action: "android.intent.action.TIME_SET"
+          Action: "android.intent.action.BOOT_COMPLETED"
+      android.intent.action.TIME_SET:
+        bf33d9f co.ke.roadready.provider/androidx.work.impl.background.systemalarm.RescheduleReceiver filter b51deec
+          Action: "android.intent.action.TIMEZONE_CHANGED"
+          Action: "android.intent.action.TIME_SET"
+          Action: "android.intent.action.BOOT_COMPLETED"
+      androidx.profileinstaller.action.SKIP_FILE:
+        d4b1531 co.ke.roadready.provider/androidx.profileinstaller.ProfileInstallReceiver filter d694197
+          Action: "androidx.profileinstaller.action.SKIP_FILE"
+      androidx.profileinstaller.action.BENCHMARK_OPERATION:
+        d4b1531 co.ke.roadready.provider/androidx.profileinstaller.ProfileInstallReceiver filter 50ad36d
+          Action: "androidx.profileinstaller.action.BENCHMARK_OPERATION"
+      android.intent.action.BOOT_COMPLETED:
+        959fe45 co.ke.roadready.provider/expo.modules.notifications.service.NotificationsService filter 528799a
+          Action: "android.intent.action.QUICKBOOT_POWERON"
+          Action: "com.htc.intent.action.QUICKBOOT_POWERON"
+          Action: "expo.modules.notifications.NOTIFICATION_EVENT"
+          Action: "android.intent.action.BOOT_COMPLETED"
+          Action: "android.intent.action.MY_PACKAGE_REPLACED"
+          Action: "android.intent.action.REBOOT"
+          mPriority=-1, mOrder=0, mHasStaticPartialTypes=false, mHasDynamicPartialTypes=false
+        e64e2cb co.ke.roadready.provider/expo.modules.taskManager.TaskBroadcastReceiver filter 2109aa8
+          Action: "expo.modules.taskManager.TaskBroadcastReceiver.INTENT_ACTION"
+          Action: "android.intent.action.BOOT_COMPLETED"
+          Action: "android.intent.action.MY_PACKAGE_REPLACED"
+        bf33d9f co.ke.roadready.provider/androidx.work.impl.background.systemalarm.RescheduleReceiver filter b51deec
+          Action: "android.intent.action.TIMEZONE_CHANGED"
+          Action: "android.intent.action.TIME_SET"
+          Action: "android.intent.action.BOOT_COMPLETED"
+      android.intent.action.ACTION_POWER_CONNECTED:
+        25ce0a7 co.ke.roadready.provider/androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryChargingProxy filter 628b954
+          Action: "android.intent.action.ACTION_POWER_DISCONNECTED"
+          Action: "android.intent.action.ACTION_POWER_CONNECTED"
+      androidx.work.diagnostics.REQUEST_DIAGNOSTICS:
+        d814bb co.ke.roadready.provider/androidx.work.impl.diagnostics.DiagnosticsReceiver filter 5f3fdd8
+          Action: "androidx.work.diagnostics.REQUEST_DIAGNOSTICS"
+      android.intent.action.MY_PACKAGE_REPLACED:
+        959fe45 co.ke.roadready.provider/expo.modules.notifications.service.NotificationsService filter 528799a
+          Action: "android.intent.action.QUICKBOOT_POWERON"
+          Action: "com.htc.intent.action.QUICKBOOT_POWERON"
+          Action: "expo.modules.notifications.NOTIFICATION_EVENT"
+          Action: "android.intent.action.BOOT_COMPLETED"
+          Action: "android.intent.action.MY_PACKAGE_REPLACED"
+          Action: "android.intent.action.REBOOT"
+          mPriority=-1, mOrder=0, mHasStaticPartialTypes=false, mHasDynamicPartialTypes=false
+        e64e2cb co.ke.roadready.provider/expo.modules.taskManager.TaskBroadcastReceiver filter 2109aa8
+          Action: "expo.modules.taskManager.TaskBroadcastReceiver.INTENT_ACTION"
+          Action: "android.intent.action.BOOT_COMPLETED"
+          Action: "android.intent.action.MY_PACKAGE_REPLACED"
+      androidx.work.impl.background.systemalarm.UpdateProxies:
+        a5002b5 co.ke.roadready.provider/androidx.work.impl.background.systemalarm.ConstraintProxyUpdateReceiver filter 1e27d4a
+          Action: "androidx.work.impl.background.systemalarm.UpdateProxies"
+      android.intent.action.REBOOT:
+        959fe45 co.ke.roadready.provider/expo.modules.notifications.service.NotificationsService filter 528799a
+          Action: "android.intent.action.QUICKBOOT_POWERON"
+          Action: "com.htc.intent.action.QUICKBOOT_POWERON"
+          Action: "expo.modules.notifications.NOTIFICATION_EVENT"
+          Action: "android.intent.action.BOOT_COMPLETED"
+          Action: "android.intent.action.MY_PACKAGE_REPLACED"
+          Action: "android.intent.action.REBOOT"
+          mPriority=-1, mOrder=0, mHasStaticPartialTypes=false, mHasDynamicPartialTypes=false
+
+Service Resolver Table:
+  Non-Data Actions:
+      com.google.firebase.MESSAGING_EVENT:
+        728aff0 co.ke.roadready.provider/expo.modules.notifications.service.ExpoFirebaseMessagingService filter 58e3969
+          Action: "com.google.firebase.MESSAGING_EVENT"
+          mPriority=-1, mOrder=0, mHasStaticPartialTypes=false, mHasDynamicPartialTypes=false
+        3429fee co.ke.roadready.provider/com.google.firebase.messaging.FirebaseMessagingService filter 2ccc8f
+          Action: "com.google.firebase.MESSAGING_EVENT"
+          mPriority=-500, mOrder=0, mHasStaticPartialTypes=false, mHasDynamicPartialTypes=false
+      com.google.android.gms.metadata.MODULE_DEPENDENCIES:
+        5556ba2 co.ke.roadready.provider/com.google.android.gms.metadata.ModuleDependencies filter d766033
+          Action: "com.google.android.gms.metadata.MODULE_DEPENDENCIES"
+
+Domain verification status:
+
+Permissions:
+  Permission [co.ke.roadready.provider.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION] (9dfc7b3):
+    sourcePackage=co.ke.roadready.provider
+    uid=10229 gids=[] type=0 prot=signature
+    perm=PermissionInfo{72f7ff8 co.ke.roadready.provider.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION}
+    flags=0x0
+
+Registered ContentProviders:
+  co.ke.roadready.provider/expo.modules.filesystem.FileSystemFileProvider:
+    Provider{a073cd1 co.ke.roadready.provider/expo.modules.filesystem.FileSystemFileProvider}
+  co.ke.roadready.provider/com.google.firebase.provider.FirebaseInitProvider:
+    Provider{442c336 co.ke.roadready.provider/com.google.firebase.provider.FirebaseInitProvider}
+  co.ke.roadready.provider/expo.modules.imagepicker.fileprovider.ImagePickerFileProvider:
+    Provider{9abc237 co.ke.roadready.provider/expo.modules.imagepicker.fileprovider.ImagePickerFileProvider}
+  co.ke.roadready.provider/com.canhub.cropper.CropFileProvider:
+    Provider{d8a3a4 co.ke.roadready.provider/com.canhub.cropper.CropFileProvider}
+  co.ke.roadready.provider/androidx.startup.InitializationProvider:
+    Provider{2f1d50d co.ke.roadready.provider/androidx.startup.InitializationProvider}
+  co.ke.roadready.provider/io.sentry.android.core.SentryPerformanceProvider:
+    Provider{4efdcc2 co.ke.roadready.provider/io.sentry.android.core.SentryPerformanceProvider}
+  co.ke.roadready.provider/io.sentry.android.core.SentryInitProvider:
+    Provider{f704ad3 co.ke.roadready.provider/io.sentry.android.core.SentryInitProvider}
+
+ContentProvider Authorities:
+  [co.ke.roadready.provider.ImagePickerFileProvider]:
+    Provider{9abc237 co.ke.roadready.provider/expo.modules.imagepicker.fileprovider.ImagePickerFileProvider}
+      applicationInfo=ApplicationInfo{a92c170 co.ke.roadready.provider}
+  [co.ke.roadready.provider.cropper.fileprovider]:
+    Provider{d8a3a4 co.ke.roadready.provider/com.canhub.cropper.CropFileProvider}
+      applicationInfo=ApplicationInfo{40cace9 co.ke.roadready.provider}
+  [co.ke.roadready.provider.SentryPerformanceProvider]:
+    Provider{4efdcc2 co.ke.roadready.provider/io.sentry.android.core.SentryPerformanceProvider}
+      applicationInfo=ApplicationInfo{b4acd6e co.ke.roadready.provider}
+  [co.ke.roadready.provider.FileSystemFileProvider]:
+    Provider{a073cd1 co.ke.roadready.provider/expo.modules.filesystem.FileSystemFileProvider}
+      applicationInfo=ApplicationInfo{a852c0f co.ke.roadready.provider}
+  [co.ke.roadready.provider.androidx-startup]:
+    Provider{2f1d50d co.ke.roadready.provider/androidx.startup.InitializationProvider}
+      applicationInfo=ApplicationInfo{ba849c co.ke.roadready.provider}
+  [co.ke.roadready.provider.SentryInitProvider]:
+    Provider{f704ad3 co.ke.roadready.provider/io.sentry.android.core.SentryInitProvider}
+      applicationInfo=ApplicationInfo{7a2ea5 co.ke.roadready.provider}
+  [co.ke.roadready.provider.firebaseinitprovider]:
+    Provider{442c336 co.ke.roadready.provider/com.google.firebase.provider.FirebaseInitProvider}
+      applicationInfo=ApplicationInfo{6da527a co.ke.roadready.provider}
+
+Key Set Manager:
+  [co.ke.roadready.provider]
+      Signing KeySets: 66
+
+Packages:
+  Package [co.ke.roadready.provider] (ec414b):
+    appId=10229
+    pccId=-1
+    pkg=Package{b7ed728 co.ke.roadready.provider}
+    codePath=/data/app/~~Y2UdRi0AbfPnmo7cYbgK2Q==/co.ke.roadready.provider-kn14ZbhT_r1PU5off4HtIA==
+    resourcePath=/data/app/~~Y2UdRi0AbfPnmo7cYbgK2Q==/co.ke.roadready.provider-kn14ZbhT_r1PU5off4HtIA==
+    legacyNativeLibraryDir=/data/app/~~Y2UdRi0AbfPnmo7cYbgK2Q==/co.ke.roadready.provider-kn14ZbhT_r1PU5off4HtIA==/lib
+    extractNativeLibs=false
+    primaryCpuAbi=x86_64
+    secondaryCpuAbi=null
+    cpuAbiOverride=null
+    versionCode=12 minSdk=23 targetSdk=34
+    minExtensionVersions=[]
+    versionName=1.0.0
+    hiddenApiEnforcementPolicy=2
+    usesNonSdkApi=false
+    splits=[base]
+    apkSigningVersion=3
+    flags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP KILL_AFTER_RESTORE ]
+    privateFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PARTIALLY_DIRECT_BOOT_AWARE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    forceQueryable=false
+    pageSizeCompat=6
+    queriesPackages=[com.google.android.apps.maps]
+    queriesIntents=[Intent { act=android.intent.action.VIEW cat=[android.intent.category.BROWSABLE] dat=https:/... }, Intent { act=android.intent.action.OPEN_DOCUMENT_TREE }, Intent { act=android.media.action.IMAGE_CAPTURE }, Intent { act=android.media.action.ACTION_VIDEO_CAPTURE }, Intent { act=android.intent.action.GET_CONTENT cat=[android.intent.category.OPENABLE] dat=content://*/... typ=*/* }]
+    scannedAsStoppedSystemApp=false
+    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]
+    usesOptionalLibraries:
+      org.apache.http.legacy
+    usesLibraryFiles:
+      /system/framework/org.apache.http.legacy.jar
+    timeStamp=2026-03-27 11:00:57
+    lastUpdateTime=2026-03-27 11:01:04
+    installerPackageName=null
+    installerPackageUid=-1
+    initiatingPackageName=com.android.shell
+    originatingPackageName=null
+    packageSource=1
+    appMetadataFilePath=null
+    appMetadataSource=0
+    signatures=PackageSignatures{b7ffc41 version:3, signatures:[27867841], past signatures:[]}
+    installPermissionsFixed=false
+    pkgFlags=[ HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP KILL_AFTER_RESTORE ]
+    privatePkgFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PARTIALLY_DIRECT_BOOT_AWARE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    apexModuleName=null
+    declared permissions:
+      co.ke.roadready.provider.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: prot=signature
+    requested permissions:
+      co.ke.roadready.provider.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+      com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE
+      com.sonyericsson.home.permission.BROADCAST_BADGE
+      android.permission.POST_NOTIFICATIONS
+      com.google.android.c2dm.permission.RECEIVE
+      android.permission.ACCESS_FINE_LOCATION
+      com.google.android.providers.gsf.permission.READ_GSERVICES
+      android.permission.ACCESS_LOCAL_NETWORK
+      android.permission.SYSTEM_ALERT_WINDOW
+      com.oppo.launcher.permission.WRITE_SETTINGS
+      me.everything.badger.permission.BADGE_COUNT_READ
+      com.anddoes.launcher.permission.UPDATE_COUNT
+      com.sec.android.provider.badge.permission.READ
+      android.permission.FOREGROUND_SERVICE
+      me.everything.badger.permission.BADGE_COUNT_WRITE
+      android.permission.READ_MEDIA_VISUAL_USER_SELECTED
+      com.huawei.android.launcher.permission.WRITE_SETTINGS
+      android.permission.RECEIVE_BOOT_COMPLETED
+      android.permission.FOREGROUND_SERVICE_LOCATION
+      android.permission.INTERNET
+      android.permission.READ_EXTERNAL_STORAGE
+      android.permission.ACCESS_COARSE_LOCATION
+      android.permission.READ_APP_BADGE
+      android.permission.READ_MEDIA_IMAGES
+      com.majeur.launcher.permission.UPDATE_BADGE
+      android.permission.ACCESS_NETWORK_STATE
+      com.oppo.launcher.permission.READ_SETTINGS
+      android.permission.CAMERA
+      com.sonymobile.home.permission.PROVIDER_INSERT_BADGE
+      com.google.android.gms.permission.ACTIVITY_RECOGNITION
+      com.huawei.android.launcher.permission.READ_SETTINGS
+      android.permission.READ_MEDIA_VIDEO
+      android.permission.USE_LOOPBACK_INTERFACE
+      com.sec.android.provider.badge.permission.WRITE
+      android.permission.WRITE_EXTERNAL_STORAGE
+      android.permission.VIBRATE
+      com.huawei.android.launcher.permission.CHANGE_BADGE
+      android.permission.ACCESS_WIFI_STATE
+      com.htc.launcher.permission.UPDATE_SHORTCUT
+      android.permission.RECORD_AUDIO
+      com.htc.launcher.permission.READ_SETTINGS
+      android.permission.WAKE_LOCK
+      android.permission.ACCESS_BACKGROUND_LOCATION
+    install permissions:
+      co.ke.roadready.provider.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+      com.google.android.finsky.permission.BIND_GET_INSTALL_REFERRER_SERVICE: granted=true
+      com.google.android.c2dm.permission.RECEIVE: granted=true
+      com.google.android.providers.gsf.permission.READ_GSERVICES: granted=true
+      android.permission.FOREGROUND_SERVICE: granted=true
+      android.permission.RECEIVE_BOOT_COMPLETED: granted=true
+      android.permission.FOREGROUND_SERVICE_LOCATION: granted=true
+      android.permission.INTERNET: granted=true
+      android.permission.ACCESS_NETWORK_STATE: granted=true
+      com.google.android.gms.permission.ACTIVITY_RECOGNITION: granted=true
+      android.permission.USE_LOOPBACK_INTERFACE: granted=true
+      android.permission.VIBRATE: granted=true
+      android.permission.ACCESS_WIFI_STATE: granted=true
+      android.permission.WAKE_LOCK: granted=true
+    User 0: ceDataInode=360567 deDataInode=58046 pccCeDataInode=0 pccDeDataInode=0 installed=true hidden=false suspended=false appLockEnabled=false distractionFlags=0 stopped=false notLaunched=false enabled=0 instant=false virtual=false quarantined=false
+      installReason=0
+      dataDir=/data/user/0/co.ke.roadready.provider
+      firstInstallTime=2026-03-27 10:38:51
+      uninstallReason=0
+      overlay paths:
+        /product/overlay/EmulationPixel9/EmulationPixel9Overlay.apk
+        /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk
+        /data/resource-cache/com.android.systemui-neutral-JxxV.frro
+        /data/resource-cache/com.android.systemui-accent-SM27.frro
+        /data/resource-cache/com.android.systemui-dynamic-Z5gc.frro
+      legacy overlay paths:
+        /product/overlay/EmulationPixel9/EmulationPixel9Overlay.apk
+        /product/overlay/NavigationBarModeGestural/NavigationBarModeGesturalOverlay.apk
+      gids=[3003]
+      runtime permissions:
+        android.permission.POST_NOTIFICATIONS: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.ACCESS_FINE_LOCATION: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.ACCESS_LOCAL_NETWORK: granted=true, flags=[ REVOKE_WHEN_REQUESTED|USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_MEDIA_VISUAL_USER_SELECTED: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_EXTERNAL_STORAGE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]
+        android.permission.ACCESS_COARSE_LOCATION: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_MEDIA_IMAGES: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.CAMERA: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.READ_MEDIA_VIDEO: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.WRITE_EXTERNAL_STORAGE: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]
+        android.permission.RECORD_AUDIO: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+        android.permission.ACCESS_BACKGROUND_LOCATION: granted=false, flags=[ USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED|RESTRICTION_INSTALLER_EXEMPT]
+      enabledComponents:
+        androidx.work.impl.background.systemjob.SystemJobService
+
+Queries:
+  system apps queryable: false
+  queries via forceQueryable:
+  queries via package name:
+    co.ke.roadready.provider:
+      com.google.android.apps.maps
+  queries via component:
+    com.google.android.as.oss:
+      co.ke.roadready.provider
+    com.google.android.as:
+      co.ke.roadready.provider
+    com.google.android.apps.messaging:
+      co.ke.roadready.provider
+    com.google.android.settings.intelligence:
+      co.ke.roadready.provider
+    com.google.android.glasses.companion:
+      co.ke.roadready.provider
+    com.google.android.apps.accessibility.voiceaccess:
+      co.ke.roadready.provider
+    co.ke.roadready.provider:
+      com.google.android.documentsui
+      com.google.android.googlequicksearchbox
+      com.android.camera2
+      com.android.chrome
+      com.google.android.apps.docs
+      com.google.android.apps.photos
+      com.google.android.photopicker
+  queryable via interaction:
+    User 0:
+      [com.android.emulator.multidisplay,android,com.android.DeviceAsWebcam,com.android.dynsystem,com.android.location.fused,com.android.settings,com.android.keychain,com.android.localtransport,com.android.providers.settings,com.android.server.telecom,com.android.inputdevices]:
+        co.ke.roadready.provider
+      com.google.android.gms:
+        co.ke.roadready.provider
+  queryable via uses-library:
+
+Dexopt state:
+  [co.ke.roadready.provider]
+    path: /data/app/~~Y2UdRi0AbfPnmo7cYbgK2Q==/co.ke.roadready.provider-kn14ZbhT_r1PU5off4HtIA==/base.apk
+      x86_64: [status=verify] [reason=install] [primary-abi]
+        [location is /data/app/~~Y2UdRi0AbfPnmo7cYbgK2Q==/co.ke.roadready.provider-kn14ZbhT_r1PU5off4HtIA==/oat/x86_64/base.odex]
