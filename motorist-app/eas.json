@@ -23,7 +23,7 @@
       "distribution": "internal",
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://roadready-api-staging.railway.app",
+        "EXPO_PUBLIC_API_URL": "https://roadready-production-a741.up.railway.app",
         "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "YOUR_STAGING_MAPS_KEY"
       },
       "android": {
@@ -37,7 +37,7 @@
       "autoIncrement": true,
       "channel": "production",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://roadready-api.railway.app",
+        "EXPO_PUBLIC_API_URL": "https://roadready-production-a741.up.railway.app",
         "EXPO_PUBLIC_GOOGLE_MAPS_KEY": "AIzaSyAMNMJP1fmh3Ro4SC4TMH5BaK4cMR3uVy4"
       },
       "android": {
