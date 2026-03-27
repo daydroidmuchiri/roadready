@@ -47,7 +47,6 @@
 // Place this file at backend/sentry.js
 
 const Sentry = require('@sentry/node');
-const { ProfilingIntegration } = require('@sentry/profiling-node');
 
 let initialised = false;
 
@@ -65,10 +64,8 @@ function init() {
     integrations: [
       new Sentry.Integrations.Http({ tracing: true }),
       new Sentry.Integrations.Express({ app: null }),   // app injected below
-      new ProfilingIntegration(),
     ],
     tracesSampleRate:   process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-    profilesSampleRate: 0.1,
 
     // Scrub sensitive fields from error reports
     beforeSend(event) {
