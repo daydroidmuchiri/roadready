@@ -54,7 +54,7 @@ export function AuthFlow({ onAuthenticated, role = 'motorist' }) {
   };
 
   const handleOTPDone = ({ isNewUser, token, user }) => {
-    if (isNewUser && !user.name) {
+    if (isNewUser && (!user.name || user.name === 'New User')) {
       setStep('name');
     } else {
       finishAuth(token, user);
@@ -259,11 +259,14 @@ export function OTPScreen({ phone, role, onDone, onBack }) {
       const res  = await fetch(`${API}/api/auth/otp/verify`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ phone, code: codeStr, role }),
+        body:    JSON.stringify({ phone, code: codeStr, role, name: 'New User' }),
       });
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.error?.fields) {
+          Alert.alert('Validation Error Details', JSON.stringify(data.error.fields), [{ text: 'OK' }]);
+        }
         const msg = data.error?.message || 'Incorrect code. Please try again.';
         setError(msg);
         setCode(['', '', '', '', '', '']);

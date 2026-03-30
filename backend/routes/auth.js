@@ -156,15 +156,12 @@ router.post('/otp/verify', asyncHandler(async (req, res) => {
   let user = await Users.findByPhone(cleanPhone);
 
   if (!user) {
-    // New user — name is required for registration
-    if (!name || name.trim().length < 2) {
-      throw new ValidationError('Validation failed', {
-        name: 'Please provide your full name to complete registration',
-      });
-    }
+    // New user — name is required for full registration, but we allow 'New User'
+    // so the mobile app doesn't fail validation on the initial OTP screen.
+    const finalName = name && name.trim().length >= 2 ? name.trim() : 'New User';
 
     user = await Users.create({
-      name:         name.trim(),
+      name:         finalName,
       phone:        cleanPhone,
       passwordHash: null,              // OTP users have no password
       role:         role || 'motorist',
