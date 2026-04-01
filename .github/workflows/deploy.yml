@@ -112,7 +112,6 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway link ${{ secrets.RAILWAY_SERVICE_ID }}
           railway up --service ${{ secrets.RAILWAY_SERVICE_ID }} --detach
 
       - name: Deploy to Railway (Staging)
@@ -121,7 +120,6 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway link ${{ secrets.RAILWAY_SERVICE_ID_STAGING }}
           railway up --service ${{ secrets.RAILWAY_SERVICE_ID_STAGING }} --detach
 
       - name: Wait for deployment and health check
@@ -173,7 +171,7 @@ jobs:
           VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: vercel --prod --token $VERCEL_TOKEN
+        run: vercel --prod --token $VERCEL_TOKEN --scope $VERCEL_ORG_ID
 
       - name: Deploy to Vercel (Preview / Staging)
         if: github.ref == 'refs/heads/staging'
@@ -182,7 +180,7 @@ jobs:
           VERCEL_TOKEN:      ${{ secrets.VERCEL_TOKEN }}
           VERCEL_ORG_ID:     ${{ secrets.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: vercel --token $VERCEL_TOKEN
+        run: vercel --token $VERCEL_TOKEN --scope $VERCEL_ORG_ID
 
   # ── 4. Notify on failure ──────────────────────────────────────────────────────
   notify-failure:
