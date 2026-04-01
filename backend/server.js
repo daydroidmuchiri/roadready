@@ -87,9 +87,6 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
-// Healthcheck for Railway / Render / Fly — must respond before DB is ready
-app.get('/health', (_req, res) => res.status(200).json({ status: 'ok', ts: Date.now() }));
-
 // ─── Rate Limiters ────────────────────────────────────────────────────────────
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, max: 200, standardHeaders: true, legacyHeaders: false,
@@ -644,6 +641,7 @@ async function start() {
 
   // ── Start HTTP server ─────────────────────────────────────────────────────
   // Railway injects PORT automatically. '0.0.0.0' required for Railway/Render.
+  // Migrations run before this via `npm start` (node db/migrate.js && node server.js)
   server.listen(PORT, '0.0.0.0', () => {
     console.log(JSON.stringify({
       level:     'INFO',
@@ -653,19 +651,6 @@ async function start() {
       nodeVersion: process.version,
       timestamp: new Date().toISOString(),
     }));
-
-    // Run DB migrations AFTER the server starts listening so /health is
-    // reachable immediately (Railway healthcheck won't block on migrations).
-    const { execFile } = require('child_process');
-    execFile('node', ['db/migrate.js'], { cwd: __dirname }, (err, stdout, stderr) => {
-      if (stdout) console.log('[MIGRATE]', stdout.trim());
-      if (stderr) console.error('[MIGRATE]', stderr.trim());
-      if (err) {
-        console.error(JSON.stringify({ level: 'ERROR', event: 'migration_failed', message: err.message }));
-      } else {
-        console.log(JSON.stringify({ level: 'INFO', event: 'migrations_complete' }));
-      }
-    });
   });
 
   // ── Graceful shutdown ─────────────────────────────────────────────────────
