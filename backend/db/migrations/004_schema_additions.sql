@@ -26,7 +26,7 @@ CREATE INDEX IF NOT EXISTS idx_payouts_provider_jobs
 -- CREATE INDEX for the cleanup query
 CREATE INDEX IF NOT EXISTS idx_otp_cleanup
   ON otp_codes(created_at)
-  WHERE used = TRUE OR expires_at < NOW();
+  WHERE used = TRUE;
 
 -- Rate limit cleanup index
 CREATE INDEX IF NOT EXISTS idx_otp_rl_cleanup
