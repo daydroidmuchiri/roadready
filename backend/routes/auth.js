@@ -18,7 +18,7 @@ const express  = require('express');
 const router   = express.Router();
 const bcrypt   = require('bcryptjs');
 const jwt      = require('jsonwebtoken');
-const rateLimit = require('express-rate-limit');
+const { otpSendLimiter } = require('../middleware/rateLimiter.middleware');
 
 const { Users } = require('../db/queries');
 const {
@@ -52,13 +52,7 @@ const schemas = {
   },
 };
 
-// Strict rate limiter for OTP sending — separate from global limiter
-const otpSendLimiter = rateLimit({
-  windowMs: 60 * 1000,   // 1 minute
-  max: 3,                // 3 OTP sends per minute per IP
-  skipSuccessfulRequests: false,
-  message: { error: { code: 'RATE_LIMITED', message: 'Too many OTP requests. Please wait 1 minute.' } },
-});
+// OTP send limiter — defined in middleware/rateLimiter.middleware.js, bypassed in NODE_ENV=test
 
 // ─── POST /api/auth/otp/send ──────────────────────────────────────────────────
 // Step 1: Request an OTP. Validates phone, checks rate limits, sends SMS.

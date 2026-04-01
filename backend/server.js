@@ -27,7 +27,7 @@ const http       = require('http');
 const { Server } = require('socket.io');
 const cors       = require('cors');
 const helmet     = require('helmet');
-const rateLimit  = require('express-rate-limit');
+const { globalLimiter, authLimiter, aiLimiter } = require('./middleware/rateLimiter.middleware');
 const morgan     = require('morgan');
 const bcrypt     = require('bcryptjs');
 const jwt        = require('jsonwebtoken');
@@ -88,18 +88,7 @@ app.use(express.json({ limit: '10kb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
 // ─── Rate Limiters ────────────────────────────────────────────────────────────
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 200, standardHeaders: true, legacyHeaders: false,
-  message: { error: { code: 'RATE_LIMITED', message: 'Too many requests — please slow down.' } },
-});
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, max: 10, skipSuccessfulRequests: true,
-  message: { error: { code: 'RATE_LIMITED', message: 'Too many login attempts. Wait 15 minutes.' } },
-});
-const aiLimiter = rateLimit({
-  windowMs: 60 * 1000, max: 20,
-  message: { error: { code: 'RATE_LIMITED', message: 'AI rate limit reached — wait a moment.' } },
-});
+// Defined in middleware/rateLimiter.middleware.js — bypassed in NODE_ENV=test
 
 app.use(globalLimiter);
 app.use('/api/auth', authRouter);
