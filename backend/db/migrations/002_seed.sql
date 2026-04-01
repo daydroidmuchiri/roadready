@@ -108,10 +108,13 @@ VALUES (
 END $$;
 
 -- ─── Demo job (for testing) ───────────────────────────────────
+-- NOTE: id is J9001 (not J1001) so it never collides with the sequence
+-- (job_seq starts at 1001 and counts up). The setval call below ensures
+-- all sequence-generated IDs start above 9000.
 
 INSERT INTO jobs (id, motorist_id, provider_id, service_id, price, commission, address, lat, lng, status, created_at, matched_at)
 VALUES (
-  'J1001',
+  'J9001',
   '00000000-0000-0000-0000-000000000002',
   '00000000-0000-0000-0000-000000000010',
   'jumpstart',
@@ -122,3 +125,6 @@ VALUES (
   NOW() - INTERVAL '2 hours',
   NOW() - INTERVAL '1 hour 45 minutes'
 ) ON CONFLICT (id) DO NOTHING;
+
+-- The sequence (job_seq) stays at its default start of 1001, so
+-- test-generated jobs will be J1001, J1002 … well below J9001.

@@ -76,9 +76,39 @@ async function promoteToAdmin(phone) {
 // ─── Setup / teardown ─────────────────────────────────────────────────────────
 
 beforeAll(async () => {
-  // Clean up test accounts from previous runs to avoid CONFLICT errors
+  // Clean up any leftover test accounts from previous runs (same FK order as afterAll).
   const testPhones = [MOTORIST_PHONE, PROVIDER_PHONE, ADMIN_PHONE, '0799000099',
     '0799000098', '0799000097', '0799000096', '+254799000095'];
+
+  await pool.query(
+    `DELETE FROM job_status_history
+     WHERE changed_by IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
+    [testPhones]
+  );
+  await pool.query(
+    `DELETE FROM job_status_history
+     WHERE job_id IN (
+       SELECT id FROM jobs
+       WHERE motorist_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))
+     )`,
+    [testPhones]
+  );
+  await pool.query(
+    `DELETE FROM payments
+     WHERE motorist_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
+    [testPhones]
+  );
+  await pool.query(
+    `DELETE FROM payouts
+     WHERE provider_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
+    [testPhones]
+  );
+  await pool.query(
+    `DELETE FROM jobs
+     WHERE motorist_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))
+        OR provider_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
+    [testPhones]
+  );
   await pool.query(
     `DELETE FROM users WHERE phone = ANY($1::text[])`,
     [testPhones]
@@ -95,13 +125,66 @@ beforeAll(async () => {
 }, 30000);
 
 afterAll(async () => {
-  // Clean up test data
+  // Clean up test data in FK dependency order so we never hit a constraint violation.
+  //
+  // Dependency graph (child → parent):
+  //   job_status_history → jobs, users (changed_by)
+  //   payments           → jobs, users (motorist_id)
+  //   payouts            → users (provider_id)
+  //   jobs               → users (motorist_id, provider_id)
+  //   provider_profiles  → users  [ON DELETE CASCADE — handled automatically]
+  //   refresh_tokens     → users  [ON DELETE CASCADE — handled automatically]
+  //
+  // We must delete non-cascade children BEFORE deleting users.
+
   const testPhones = [MOTORIST_PHONE, PROVIDER_PHONE, ADMIN_PHONE, '0799000099',
     '0799000098', '0799000097', '0799000096', '+254799000095'];
+
+  // 1. job_status_history rows whose changed_by is one of our test users
+  await pool.query(
+    `DELETE FROM job_status_history
+     WHERE changed_by IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
+    [testPhones]
+  );
+
+  // 2. job_status_history rows for jobs owned by our test users
+  await pool.query(
+    `DELETE FROM job_status_history
+     WHERE job_id IN (
+       SELECT id FROM jobs
+       WHERE motorist_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))
+     )`,
+    [testPhones]
+  );
+
+  // 3. payments
+  await pool.query(
+    `DELETE FROM payments
+     WHERE motorist_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
+    [testPhones]
+  );
+
+  // 4. payouts (provider_id FK)
+  await pool.query(
+    `DELETE FROM payouts
+     WHERE provider_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
+    [testPhones]
+  );
+
+  // 5. jobs (motorist_id or provider_id)
+  await pool.query(
+    `DELETE FROM jobs
+     WHERE motorist_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))
+        OR provider_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
+    [testPhones]
+  );
+
+  // 6. users — provider_profiles and refresh_tokens cascade automatically
   await pool.query(
     `DELETE FROM users WHERE phone = ANY($1::text[])`,
     [testPhones]
   );
+
   server.close();
   await pool.end();
 });
