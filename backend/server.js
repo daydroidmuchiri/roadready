@@ -32,7 +32,7 @@ const { globalLimiter, authLimiter, aiLimiter } = require('./middleware/rateLimi
 const morgan     = require('morgan');
 const bcrypt     = require('bcryptjs');
 const jwt        = require('jsonwebtoken');
-const Anthropic  = require('@anthropic-ai/sdk');
+
 
 // ─── Database ─────────────────────────────────────────────────────────────────
 const { checkConnection, closePool } = require('./db/pool');
@@ -60,9 +60,7 @@ const { initiateSTKPush, parseCallback } = require('./mpesa');
 
 const app       = express();
 const server    = http.createServer(app);
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-const JWT_SECRET    = process.env.JWT_SECRET;
+const { callClaude } = require('./services/ai.service');
 const PORT          = process.env.PORT || 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
 
@@ -416,17 +414,6 @@ app.post('/api/payments/mpesa/callback', asyncHandler(async (req, res) => {
 }));
 
 // ─── AI Endpoints ─────────────────────────────────────────────────────────────
-async function callClaude(params) {
-  try {
-    return await anthropic.messages.create(params);
-  } catch (err) {
-    if (err.status === 529 || err.status === 503)
-      throw new ExternalServiceError('AI', 'temporarily overloaded — try again shortly');
-    if (err.status === 401) throw new ExternalServiceError('AI', 'authentication failed');
-    if (err.status === 429) throw new ExternalServiceError('AI', 'quota exceeded');
-    throw new ExternalServiceError('AI', err.message || 'unknown error');
-  }
-}
 
 app.post('/api/ai/diagnose', auth, aiLimiter, asyncHandler(async (req, res) => {
   validate(req.body, schemas.aiMessage);
