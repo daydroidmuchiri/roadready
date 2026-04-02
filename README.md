@@ -7,10 +7,9 @@ On-demand roadside assistance. Kenya's answer to the Uber for breakdowns.
 roadready/
 ├── backend/                    Node.js/Express API
 │   ├── routes/                 Route handlers
-│   ├── services/               Business logic (dispatch, M-Pesa, sockets, AI)
 │   ├── middleware/             Auth and rate limiting
 │   ├── db/                     Migrations and query layer
-│   └── server.js               App entry point
+│   └── server.js               App entry point (routes, dispatch, payments, sockets — pending modularisation)
 ├── motorist-app/               React Native (Expo) — motorist surface
 │   ├── screens/                Screen components
 │   └── hooks/                  Custom hooks
