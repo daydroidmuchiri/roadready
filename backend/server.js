@@ -23,18 +23,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const Anthropic = require('@anthropic-ai/sdk');
-// ─── Imports ─────────────────────────────────────────────────────────────────
-const express    = require('express');
-const http       = require('http');
-const { initSocket, emitToJob, emitToUser, emitToAdmins } = require('./services/socket.service');
-const { assignBestProvider } = require('./services/dispatch.service');
-const cors       = require('cors');
-const helmet     = require('helmet');
-const { globalLimiter, authLimiter, aiLimiter } = require('./middleware/rateLimiter.middleware');
-const morgan     = require('morgan');
-const bcrypt     = require('bcryptjs');
-const jwt        = require('jsonwebtoken');
-
 
 const { globalLimiter, aiLimiter } = require('./middleware/rateLimiter.middleware');
 const { createAuthMiddleware, requireRole } = require('./middleware/auth.middleware');
@@ -72,28 +60,6 @@ const server = http.createServer(app);
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 const PORT = process.env.PORT || 3001;
-// ─── Routes ───────────────────────────────────────────────────────────────────
-const mapsRouter    = require('./routes/maps');
-const authRouter    = require('./routes/auth');
-const uploadsRouter = require('./routes/uploads');
-const payoutsRouter = require('./routes/payouts');
-const { initiateSTKPush, parseCallback } = require('./mpesa');
-
-
-const app       = express();
-const server    = http.createServer(app);
-const { callClaude } = require('./services/ai.service');
-
-const healthRouter   = require('./routes/health.routes');
-const serviceRouter  = require('./routes/service.routes');
-const jobRouter      = require('./routes/job.routes');
-const providerRouter = require('./routes/provider.routes');
-const adminRouter    = require('./routes/admin.routes');
-const paymentRouter  = require('./routes/payment.routes');
-const aiRouter       = require('./routes/ai.routes');
-const { auth }       = require('./middleware/auth.middleware');
-
-const PORT          = process.env.PORT || 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
 const JWT_SECRET = process.env.JWT_SECRET;
 const auth = createAuthMiddleware(JWT_SECRET);
@@ -115,8 +81,6 @@ const dispatchService = createDispatchService({
   notifyAdminsJobStuck,
   emitToJob: socketService.emitToJob,
 });
-// ─── Socket.IO ───────────────────────────────────────────────────────────────
-const io = initSocket(server);
 
 const paymentService = createPaymentService({
   Payments,
@@ -183,19 +147,6 @@ app.use('/api', createAdminRouter({
 app.use('/api', createAiRouter({ auth, aiLimiter, anthropic }));
 app.use('/api', createPaymentRouter({ auth, requireRole, paymentService }));
 
-
-
-
-app.use('/health', healthRouter);
-app.use('/api/services', serviceRouter);
-app.use('/api/jobs', jobRouter);
-app.use('/api/providers', providerRouter);
-app.use('/api/analytics', adminRouter);
-app.use('/api/payments', paymentRouter);
-app.use('/api/ai', aiRouter);
-
-
-// ─── 404 + Error handler — MUST be last ──────────────────────────────────────
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
 
