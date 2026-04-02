@@ -71,4 +71,8 @@ function emitToAdmins(event, data) {
   io.to('admins').emit(event, data);
 }
 
-module.exports = { initSocket, emitToJob, emitToUser, emitToAdmins };
+function broadcast(event, data) {
+  io.emit(event, data);
+}
+
+module.exports = { initSocket, emitToJob, emitToUser, emitToAdmins, broadcast };
