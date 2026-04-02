@@ -24,7 +24,7 @@ Sentry.init();
 // ─── Imports ─────────────────────────────────────────────────────────────────
 const express    = require('express');
 const http       = require('http');
-const { Server } = require('socket.io');
+const { initSocket, emitToJob, emitToUser, emitToAdmins } = require('./services/socket.service');
 const cors       = require('cors');
 const helmet     = require('helmet');
 const { globalLimiter, authLimiter, aiLimiter } = require('./middleware/rateLimiter.middleware');
@@ -66,11 +66,7 @@ const PORT          = process.env.PORT || 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
 
 // ─── Socket.IO ───────────────────────────────────────────────────────────────
-const io = new Server(server, {
-  cors:         { origin: CLIENT_ORIGIN, methods: ['GET','POST'] },
-  pingTimeout:  20000,
-  pingInterval: 10000,
-});
+const io = initSocket(server);
 
 // ─── Security Middleware ──────────────────────────────────────────────────────
 app.use(Sentry.requestHandler());   // must be first middleware
@@ -97,25 +93,6 @@ app.use('/api/uploads', auth, uploadsRouter);
 app.use('/api/payouts', auth, payoutsRouter);
 
 
-// ─── Scoped event helpers ─────────────────────────────────────────────────────
-// All job-related events are scoped to the participants of that job.
-// This prevents motorists from seeing other motorists' data.
-
-function emitToJob(jobId, motoristId, providerId, event, data) {
-  // Send to motorist and provider rooms
-  if (motoristId) io.to(`user:${motoristId}`).emit(event, data);
-  if (providerId) io.to(`user:${providerId}`).emit(event, data);
-  // Also send to admin room for monitoring
-  io.to('admins').emit(event, data);
-}
-
-function emitToUser(userId, event, data) {
-  io.to(`user:${userId}`).emit(event, data);
-}
-
-function emitToAdmins(event, data) {
-  io.to('admins').emit(event, data);
-}
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', asyncHandler(async (req, res) => {
@@ -561,53 +538,6 @@ async function assignBestProvider(jobId, serviceId, lat, lng, attempt = 1) {
   }
 }
 
-// ─── WebSocket — authenticated ────────────────────────────────────────────────
-// Location update debounce — avoids writing to DB on every GPS ping (every 4s).
-// We write to DB at most once every 8 seconds per provider.
-const locationDebounce = new Map();   // providerId → timeout handle
-io.use((socket, next) => {
-  const token = socket.handshake.auth?.token;
-  if (!token) return next(new Error('No token'));
-  try { socket.user = jwt.verify(token, JWT_SECRET); next(); }
-  catch { next(new Error('Invalid token')); }
-});
-
-io.on('connection', (socket) => {
-  // Every user joins their personal room — scopes all job events
-  if (socket.user?.id) {
-    socket.join(`user:${socket.user.id}`);
-  }
-  // Admins also join the admin room for monitoring all jobs
-  if (socket.user?.role === 'admin') {
-    socket.join('admins');
-  }
-
-  socket.on('update_location', async ({ location }) => {
-    try {
-      if (socket.user?.role !== 'provider') return;
-      if (typeof location?.lat !== 'number' || typeof location?.lng !== 'number') return;
-
-      // Debounce DB writes — emit immediately for UX, write to DB every 8s max
-      clearTimeout(locationDebounce.get(socket.user.id));
-      locationDebounce.set(socket.user.id, setTimeout(async () => {
-        await Users.updateLocation(socket.user.id, location.lat, location.lng).catch(() => {});
-        locationDebounce.delete(socket.user.id);
-      }, 8000));
-      // Broadcast location only to motorists with an active job from this provider
-      // (admin room gets it too for monitoring). Not a global broadcast.
-      const activeJob = await Jobs.findActiveJobByProvider(socket.user.id).catch(() => null);
-      if (activeJob?.motoristId) {
-        emitToJob(activeJob.id, activeJob.motoristId, socket.user.id,
-          'provider_location', { providerId: socket.user.id, location });
-      }
-    } catch (err) {
-      console.error(JSON.stringify({ level: 'ERROR', event: 'ws_location_error', message: err.message }));
-    }
-  });
-
-  socket.on('error',      err    => console.error(JSON.stringify({ level: 'ERROR', event: 'ws_error', message: err.message })));
-  socket.on('disconnect', reason => console.log(JSON.stringify({ level: 'INFO', event: 'ws_disconnected', userId: socket.user?.id, reason })));
-});
 
 // ─── 404 + Error handler — MUST be last ──────────────────────────────────────
 app.use(notFoundHandler);
