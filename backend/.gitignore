@@ -10,3 +10,6 @@ npm-debug.log*
 dist/
 coverage/
 .nyc_output/
+out*.txt
+test_output.txt
+server.log

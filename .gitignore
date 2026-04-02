@@ -75,3 +75,6 @@ logs/
 
 # Coverage
 backend/coverage/
+
+# Agent Scratch
+git_tracked.txt
