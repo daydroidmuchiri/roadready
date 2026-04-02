@@ -103,13 +103,10 @@ export default function ProviderApp() {
     } catch { setIsOnline(!value); }
   };
 
-  // TODO: remove mockJob — this is hardcoded test data used only for the simulate button
-  const mockJob = {
-    id: 'J1099', serviceId: 'jumpstart', serviceName: 'Battery Jumpstart',
-    serviceEmoji: '🔋', address: 'Parklands Rd, Westlands', motoristName: 'Alice Njoroge',
-    lat: -1.2633, lng: 36.8035, price: 900, providerEarning: 760,
-    distanceKm: 1.4, expiresInSeconds: 60,
-  };
+  // TODO: remove mockJob — use a real job from the dispatch system
+  // This was placeholder demo data. Simulate button should be hidden 
+  // in production (NODE_ENV check).
+  const mockJob = null;
 
   const props = { navigate, params, socket: socketRef.current };
 

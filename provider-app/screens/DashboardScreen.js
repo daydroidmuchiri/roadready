@@ -86,14 +86,16 @@ function DashboardScreen({ navigate, isOnline, onToggle, onSimulate, dashData })
           </>
         )}
 
-        <TouchableOpacity style={s.simBtn} onPress={onSimulate}>
-          <Text style={{ fontSize: 16 }}>🎯</Text>
-          <View style={{ flex: 1, marginLeft: 9 }}>
-            <Text style={[s.small, { color: C.orange, fontWeight: '600' }]}>Simulate job alert</Text>
-            <Text style={s.tiny}>Opens job alert with navigation</Text>
-          </View>
-          <Text style={{ color: C.orange }}>›</Text>
-        </TouchableOpacity>
+        {__DEV__ && (
+          <TouchableOpacity style={s.simBtn} onPress={onSimulate}>
+            <Text style={{ fontSize: 16 }}>🎯</Text>
+            <View style={{ flex: 1, marginLeft: 9 }}>
+              <Text style={[s.small, { color: C.orange, fontWeight: '600' }]}>Simulate job alert</Text>
+              <Text style={s.tiny}>Opens job alert with navigation</Text>
+            </View>
+            <Text style={{ color: C.orange }}>›</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
