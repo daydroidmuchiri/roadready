@@ -78,3 +78,7 @@ backend/coverage/
 
 # Agent Scratch
 git_tracked.txt
+backend/out.txt
+backend/out2.txt
+backend/out3.txt
+backend/test_output.txt
