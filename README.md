@@ -3,13 +3,23 @@
 On-demand roadside assistance. Kenya's answer to the Uber for breakdowns.
 
 ## Architecture
-
 ```
 roadready/
-├── backend/          Node.js + Express + Socket.IO + Claude API
-├── admin/            React web dashboard (Ops Centre)
-├── motorist-app/     React Native (Expo) — driver-facing app
-└── provider-app/     React Native (Expo) — mechanic-facing app
+├── backend/                    Node.js/Express API
+│   ├── routes/                 Route handlers
+│   ├── services/               Business logic (dispatch, M-Pesa, sockets, AI)
+│   ├── middleware/             Auth and rate limiting
+│   ├── db/                     Migrations and query layer
+│   └── server.js               App entry point
+├── motorist-app/               React Native (Expo) — motorist surface
+│   ├── screens/                Screen components
+│   └── hooks/                  Custom hooks
+├── provider-app/               React Native (Expo) — provider surface
+│   ├── screens/                Screen components
+│   ├── hooks/                  Custom hooks
+│   └── components/             Shared UI components
+├── admin/                      React web dashboard
+└── shared/                     Shared mobile utilities
 ```
 
 ---
@@ -231,6 +241,41 @@ app.post('/api/payments/mpesa/callback', (req, res) => {
 
 ---
 
+## Deployment
+
+### Backend — Railway
+The backend deploys automatically to Railway on push to `main`.
+Set the following environment variables in Railway:
+DATABASE_URL
+JWT_SECRET
+JWT_REFRESH_SECRET
+MPESA_CONSUMER_KEY
+MPESA_CONSUMER_SECRET
+MPESA_SHORTCODE
+MPESA_PASSKEY
+MPESA_B2C_INITIATOR_NAME
+MPESA_B2C_SECURITY_CREDENTIAL
+MPESA_CALLBACK_URL
+AT_API_KEY
+AT_USERNAME
+FCM_SERVER_KEY
+CLOUDINARY_CLOUD_NAME
+CLOUDINARY_API_KEY
+CLOUDINARY_API_SECRET
+SENTRY_DSN
+ANTHROPIC_API_KEY
+NODE_ENV
+PORT
+
+### Admin Dashboard — Vercel
+The admin dashboard deploys automatically to Vercel on push to `main`.
+
+### Mobile Apps — Expo EAS Build
+Both motorist and provider apps build via EAS on push to `main`.
+Build profiles: development, preview, production.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -258,7 +303,7 @@ app.post('/api/payments/mpesa/callback', (req, res) => {
 - [x] AI dispatch assistant (Claude)
 - [x] Provider onboarding flow
 - [x] Ratings and reviews
-- [ ] Push notifications (Expo + FCM)
+- [x] Push notifications (Expo + FCM)
 - [ ] Surge pricing engine
 - [ ] Insurance company white-label API
 - [ ] Fleet management portal

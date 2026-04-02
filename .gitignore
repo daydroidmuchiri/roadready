@@ -52,3 +52,26 @@ coverage/
 # Temporary
 tmp/
 temp/
+
+# Logs
+backend/server.log
+logs/
+
+# Expo / React Native build outputs
+**/.expo/
+**/android/
+**/ios/
+
+# EAS Build
+**/eas-build-local-nodejs/
+
+# Node
+**/node_modules/
+**/dist/
+**/.next/
+
+# Environment
+.env.*.local
+
+# Coverage
+backend/coverage/
