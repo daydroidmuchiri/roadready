@@ -6,24 +6,24 @@
  */
 
 const { Pool } = require('pg');
+const { resolveSslConfig } = require('./connectionConfig');
 
 // ─── Pool configuration ───────────────────────────────────────────────────────
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+const connectionString = process.env.DATABASE_URL;
+const connectionTimeoutMillis = Number(process.env.DB_CONNECT_TIMEOUT_MS || 15000);
 
-  // SSL: required on Railway, Render, Heroku, Supabase — optional locally
-  ssl: process.env.DATABASE_SSL === 'true'
-    ? { rejectUnauthorized: false }
-    : process.env.NODE_ENV === 'production'
-      ? { rejectUnauthorized: false }
-      : false,
+const pool = new Pool({
+  connectionString,
+
+  // SSL: auto-enable for managed remote hosts like Railway, or via DATABASE_SSL=true
+  ssl: resolveSslConfig(connectionString),
 
   // Pool sizing
   max:              10,     // max concurrent connections
   min:              2,      // keep at least 2 connections warm
   idleTimeoutMillis:  30000,  // close idle connections after 30s
-  connectionTimeoutMillis: 5000,  // fail fast if we can't get a connection
+  connectionTimeoutMillis,  // remote managed DBs can take longer than localhost
   allowExitOnIdle:  false,
 });
 

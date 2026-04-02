@@ -25,6 +25,17 @@ const request = require('supertest');
 const { app, server } = require('./server');
 const { pool }        = require('./db/pool');
 
+async function retryPoolQuery(text, params, attempts = 3) {
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      return await pool.query(text, params);
+    } catch (err) {
+      if (attempt === attempts) throw err;
+      await new Promise(resolve => setTimeout(resolve, attempt * 1000));
+    }
+  }
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 let motoristToken = '';
@@ -67,7 +78,7 @@ async function loginViaOTP(phone, name, role) {
  * (There is no public admin-registration endpoint — intentionally.)
  */
 async function promoteToAdmin(phone) {
-  await pool.query(
+  await retryPoolQuery(
     `UPDATE users SET role = 'admin' WHERE phone = $1`,
     [phone]
   );
@@ -79,13 +90,28 @@ beforeAll(async () => {
   // Clean up any leftover test accounts from previous runs (same FK order as afterAll).
   const testPhones = [MOTORIST_PHONE, PROVIDER_PHONE, ADMIN_PHONE, '0799000099',
     '0799000098', '0799000097', '0799000096', '+254799000095'];
+  const rateLimitKeys = [
+    ...testPhones.map(phone => `phone:${phone}`),
+    'ip:::ffff:127.0.0.1',
+    'ip:::1',
+    'ip:127.0.0.1',
+  ];
 
-  await pool.query(
+  await retryPoolQuery(
+    `DELETE FROM otp_codes WHERE phone = ANY($1::text[])`,
+    [testPhones]
+  );
+  await retryPoolQuery(
+    `DELETE FROM otp_rate_limits WHERE key = ANY($1::text[])`,
+    [rateLimitKeys]
+  );
+
+  await retryPoolQuery(
     `DELETE FROM job_status_history
      WHERE changed_by IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
     [testPhones]
   );
-  await pool.query(
+  await retryPoolQuery(
     `DELETE FROM job_status_history
      WHERE job_id IN (
        SELECT id FROM jobs
@@ -93,23 +119,23 @@ beforeAll(async () => {
      )`,
     [testPhones]
   );
-  await pool.query(
+  await retryPoolQuery(
     `DELETE FROM payments
      WHERE motorist_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
     [testPhones]
   );
-  await pool.query(
+  await retryPoolQuery(
     `DELETE FROM payouts
      WHERE provider_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
     [testPhones]
   );
-  await pool.query(
+  await retryPoolQuery(
     `DELETE FROM jobs
      WHERE motorist_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))
         OR provider_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
     [testPhones]
   );
-  await pool.query(
+  await retryPoolQuery(
     `DELETE FROM users WHERE phone = ANY($1::text[])`,
     [testPhones]
   );
@@ -122,7 +148,7 @@ beforeAll(async () => {
   await promoteToAdmin(ADMIN_PHONE);
   // Re-issue token so it carries the 'admin' role
   adminToken = await loginViaOTP(ADMIN_PHONE, 'Test Admin', 'admin');
-}, 30000);
+}, 120000);
 
 afterAll(async () => {
   // Clean up test data in FK dependency order so we never hit a constraint violation.
@@ -139,16 +165,31 @@ afterAll(async () => {
 
   const testPhones = [MOTORIST_PHONE, PROVIDER_PHONE, ADMIN_PHONE, '0799000099',
     '0799000098', '0799000097', '0799000096', '+254799000095'];
+  const rateLimitKeys = [
+    ...testPhones.map(phone => `phone:${phone}`),
+    'ip:::ffff:127.0.0.1',
+    'ip:::1',
+    'ip:127.0.0.1',
+  ];
+
+  await retryPoolQuery(
+    `DELETE FROM otp_codes WHERE phone = ANY($1::text[])`,
+    [testPhones]
+  );
+  await retryPoolQuery(
+    `DELETE FROM otp_rate_limits WHERE key = ANY($1::text[])`,
+    [rateLimitKeys]
+  );
 
   // 1. job_status_history rows whose changed_by is one of our test users
-  await pool.query(
+  await retryPoolQuery(
     `DELETE FROM job_status_history
      WHERE changed_by IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
     [testPhones]
   );
 
   // 2. job_status_history rows for jobs owned by our test users
-  await pool.query(
+  await retryPoolQuery(
     `DELETE FROM job_status_history
      WHERE job_id IN (
        SELECT id FROM jobs
@@ -158,21 +199,21 @@ afterAll(async () => {
   );
 
   // 3. payments
-  await pool.query(
+  await retryPoolQuery(
     `DELETE FROM payments
      WHERE motorist_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
     [testPhones]
   );
 
   // 4. payouts (provider_id FK)
-  await pool.query(
+  await retryPoolQuery(
     `DELETE FROM payouts
      WHERE provider_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
     [testPhones]
   );
 
   // 5. jobs (motorist_id or provider_id)
-  await pool.query(
+  await retryPoolQuery(
     `DELETE FROM jobs
      WHERE motorist_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))
         OR provider_id IN (SELECT id FROM users WHERE phone = ANY($1::text[]))`,
@@ -180,14 +221,14 @@ afterAll(async () => {
   );
 
   // 6. users — provider_profiles and refresh_tokens cascade automatically
-  await pool.query(
+  await retryPoolQuery(
     `DELETE FROM users WHERE phone = ANY($1::text[])`,
     [testPhones]
   );
 
   server.close();
   await pool.end();
-});
+}, 120000);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 

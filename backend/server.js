@@ -1,15 +1,12 @@
 /**
- * RoadReady Backend API — PostgreSQL Edition
- * Node.js + Express + Socket.IO + PostgreSQL + Claude API
+ * RoadReady Backend API - app init and startup shell.
  */
 
-// ─── Process-level handlers FIRST ────────────────────────────────────────────
 const {
-  asyncHandler, validate, schemas,
-  globalErrorHandler, notFoundHandler,
-  registerProcessHandlers, validateEnv,
-  AuthError, NotFoundError, ConflictError,
-  ValidationError, ExternalServiceError, ForbiddenError,
+  globalErrorHandler,
+  notFoundHandler,
+  registerProcessHandlers,
+  validateEnv,
 } = require('./errors');
 
 registerProcessHandlers();
@@ -17,27 +14,35 @@ registerProcessHandlers();
 require('dotenv').config();
 validateEnv();
 
-// ─── Sentry — init BEFORE all other requires ────────────────────────────────
 const Sentry = require('./sentry');
 Sentry.init();
 
-// ─── Imports ─────────────────────────────────────────────────────────────────
-const express    = require('express');
-const http       = require('http');
-const { initSocket, emitToJob, emitToUser, emitToAdmins } = require('./services/socket.service');
-const { assignBestProvider } = require('./services/dispatch.service');
-const cors       = require('cors');
-const helmet     = require('helmet');
-const { globalLimiter, authLimiter, aiLimiter } = require('./middleware/rateLimiter.middleware');
-const morgan     = require('morgan');
-const bcrypt     = require('bcryptjs');
-const jwt        = require('jsonwebtoken');
+const express = require('express');
+const http = require('http');
+const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const Anthropic = require('@anthropic-ai/sdk');
 
-
-// ─── Database ─────────────────────────────────────────────────────────────────
+const { globalLimiter, aiLimiter } = require('./middleware/rateLimiter.middleware');
+const { createAuthMiddleware, requireRole } = require('./middleware/auth.middleware');
 const { checkConnection, closePool } = require('./db/pool');
 const { Users, Services, Jobs, Payments, Analytics, ProviderProfiles } = require('./db/queries');
-// --- Notifications ---
+const { createSocketService } = require('./services/socket.service');
+const { createDispatchService } = require('./services/dispatch.service');
+const { createPaymentService } = require('./services/payment.service');
+const { createHealthRouter } = require('./routes/health.routes');
+const { createJobRouter } = require('./routes/job.routes');
+const { createProviderRouter } = require('./routes/provider.routes');
+const { createAdminRouter } = require('./routes/admin.routes');
+const { createAiRouter } = require('./routes/ai.routes');
+const { createPaymentRouter } = require('./routes/payment.routes');
+const { createPayoutCallbackRouter } = require('./routes/payoutCallbacks.routes');
+const mapsRouter = require('./routes/maps');
+const authRouter = require('./routes/auth');
+const uploadsRouter = require('./routes/uploads');
+const payoutsRouter = require('./routes/payouts');
+const { initiateSTKPush, parseCallback } = require('./mpesa');
 const {
   notifyProviderNewJob,
   notifyProviderJobCancelled,
@@ -50,35 +55,44 @@ const {
   notifyAdminsJobStuck,
 } = require('./notifications/templates');
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
-const mapsRouter    = require('./routes/maps');
-const authRouter    = require('./routes/auth');
-const uploadsRouter = require('./routes/uploads');
-const payoutsRouter = require('./routes/payouts');
-const { initiateSTKPush, parseCallback } = require('./mpesa');
+const app = express();
+const server = http.createServer(app);
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-
-const app       = express();
-const server    = http.createServer(app);
-const { callClaude } = require('./services/ai.service');
-
-const healthRouter   = require('./routes/health.routes');
-const serviceRouter  = require('./routes/service.routes');
-const jobRouter      = require('./routes/job.routes');
-const providerRouter = require('./routes/provider.routes');
-const adminRouter    = require('./routes/admin.routes');
-const paymentRouter  = require('./routes/payment.routes');
-const aiRouter       = require('./routes/ai.routes');
-const { auth }       = require('./middleware/auth.middleware');
-
-const PORT          = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3001;
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:3000';
+const JWT_SECRET = process.env.JWT_SECRET;
+const auth = createAuthMiddleware(JWT_SECRET);
 
-// ─── Socket.IO ───────────────────────────────────────────────────────────────
-const io = initSocket(server);
+const socketService = createSocketService({
+  server,
+  clientOrigin: CLIENT_ORIGIN,
+  jwtSecret: JWT_SECRET,
+  Users,
+  Jobs,
+});
 
-// ─── Security Middleware ──────────────────────────────────────────────────────
-app.use(Sentry.requestHandler());   // must be first middleware
+const dispatchService = createDispatchService({
+  Users,
+  Jobs,
+  notifyProviderNewJob,
+  notifyMotoristProviderMatched,
+  notifyMotoristNoProviders,
+  notifyAdminsJobStuck,
+  emitToJob: socketService.emitToJob,
+});
+
+const paymentService = createPaymentService({
+  Payments,
+  Jobs,
+  initiateSTKPush,
+  parseCallback,
+  emitToJob: socketService.emitToJob,
+  emitToAdmins: socketService.emitToAdmins,
+  notifyMotoristPaymentConfirmed,
+});
+
+app.use(Sentry.requestHandler());
 app.use(helmet());
 app.set('trust proxy', 1);
 app.use(cors({
@@ -91,39 +105,57 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10kb' }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
-
-// ─── Rate Limiters ────────────────────────────────────────────────────────────
-// Defined in middleware/rateLimiter.middleware.js — bypassed in NODE_ENV=test
-
 app.use(globalLimiter);
+
+app.use('/health', createHealthRouter({ checkConnection }));
 app.use('/api/auth', authRouter);
-app.use('/api/maps',    auth, mapsRouter);
+app.use('/api/maps', auth, mapsRouter);
 app.use('/api/uploads', auth, uploadsRouter);
+app.use('/api', createPayoutCallbackRouter());
 app.use('/api/payouts', auth, payoutsRouter);
+app.use('/api', createJobRouter({
+  auth,
+  requireRole,
+  Jobs,
+  Services,
+  emitToAdmins: socketService.emitToAdmins,
+  emitToJob: socketService.emitToJob,
+  assignBestProvider: dispatchService.assignBestProvider,
+  notifyMotoristProviderArrived,
+  notifyMotoristJobComplete,
+  notifyProviderJobCancelled,
+  notifyMotoristJobCancelled,
+}));
+app.use('/api', createProviderRouter({
+  auth,
+  requireRole,
+  Users,
+  Jobs,
+  ProviderProfiles,
+  emitToAdmins: socketService.emitToAdmins,
+  io: socketService.io,
+}));
+app.use('/api', createAdminRouter({
+  auth,
+  requireRole,
+  aiLimiter,
+  anthropic,
+  Analytics,
+  Jobs,
+  Users,
+}));
+app.use('/api', createAiRouter({ auth, aiLimiter, anthropic }));
+app.use('/api', createPaymentRouter({ auth, requireRole, paymentService }));
 
-
-
-app.use('/health', healthRouter);
-app.use('/api/services', serviceRouter);
-app.use('/api/jobs', jobRouter);
-app.use('/api/providers', providerRouter);
-app.use('/api/analytics', adminRouter);
-app.use('/api/payments', paymentRouter);
-app.use('/api/ai', aiRouter);
-
-
-// ─── 404 + Error handler — MUST be last ──────────────────────────────────────
 app.use(notFoundHandler);
 app.use(globalErrorHandler);
 
-// ─── Start ────────────────────────────────────────────────────────────────────
 async function start() {
-  // ── Database connection (with retry for cold starts on Railway/Render) ───────
   let dbOk = false;
   for (let attempt = 1; attempt <= 5; attempt++) {
     dbOk = await checkConnection();
     if (dbOk) break;
-    console.warn(`[STARTUP] DB attempt ${attempt}/5 failed — retrying in 3s...`);
+    console.warn(`[STARTUP] DB attempt ${attempt}/5 failed - retrying in 3s...`);
     await new Promise(r => setTimeout(r, 3000));
   }
   if (!dbOk) {
@@ -131,23 +163,17 @@ async function start() {
     process.exit(1);
   }
 
-  // ── Start HTTP server ─────────────────────────────────────────────────────
-  // Railway injects PORT automatically. '0.0.0.0' required for Railway/Render.
-  // Migrations run before this via `npm start` (node db/migrate.js && node server.js)
   server.listen(PORT, '0.0.0.0', () => {
     console.log(JSON.stringify({
-      level:     'INFO',
-      event:     'server_started',
-      port:      PORT,
-      env:       process.env.NODE_ENV || 'development',
+      level: 'INFO',
+      event: 'server_started',
+      port: PORT,
+      env: process.env.NODE_ENV || 'development',
       nodeVersion: process.version,
       timestamp: new Date().toISOString(),
     }));
   });
 
-  // ── Graceful shutdown ─────────────────────────────────────────────────────
-  // Railway sends SIGTERM before killing the process.
-  // Give in-flight requests 10s to finish before closing.
   process.on('SIGTERM', () => {
     console.log(JSON.stringify({ level: 'INFO', event: 'sigterm_received' }));
     server.close(async () => {
@@ -155,10 +181,12 @@ async function start() {
       console.log(JSON.stringify({ level: 'INFO', event: 'graceful_shutdown_complete' }));
       process.exit(0);
     });
-    // Force exit after 10s if connections don't drain
     setTimeout(() => process.exit(1), 10000);
   });
 }
 
-start();
-module.exports = { app, server };
+if (require.main === module) {
+  start();
+}
+
+module.exports = { app, server, start };

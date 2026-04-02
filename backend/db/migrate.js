@@ -11,10 +11,13 @@ require('dotenv').config();
 const fs      = require('fs');
 const path    = require('path');
 const { Pool } = require('pg');
+const { resolveSslConfig } = require('./connectionConfig');
+
+const connectionString = process.env.DATABASE_URL;
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  connectionString,
+  ssl: resolveSslConfig(connectionString),
 });
 
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations');
@@ -156,8 +159,8 @@ async function reset() {
 
   // Re-create pool and run migrations fresh
   const pool2 = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    connectionString,
+    ssl: resolveSslConfig(connectionString),
   });
   const client2 = await pool2.connect();
   try {
