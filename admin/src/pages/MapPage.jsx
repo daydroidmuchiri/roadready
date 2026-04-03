@@ -5,6 +5,7 @@ import { C } from '../theme';
 
 const DEFAULT_CENTER = { lat: -1.286389, lng: 36.817223 };
 const DEFAULT_ZOOM = 11;
+const FOCUS_ZOOM = 14;
 const MAP_PADDING = 56;
 
 const MAP_STYLES = [
@@ -70,6 +71,19 @@ function getProviderDisplayStatus(provider, activeJobs) {
   return getProviderJobStatus(activeJobs, provider.id) || provider.status || 'offline';
 }
 
+function getProviderInitials(name) {
+  return (name || 'P')
+    .split(' ')
+    .map(part => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function getJobMarkerLabel(jobId) {
+  return String(jobId || 'JOB').slice(-4).toUpperCase();
+}
+
 function createMarkerIcon(google, color, scale) {
   return {
     path: google.maps.SymbolPath.CIRCLE,
@@ -88,7 +102,7 @@ function renderInfoWindowContent(title, lines, accent) {
     .join('');
 
   return `
-    <div style="min-width:200px;padding:4px 2px 2px;">
+    <div style="min-width:220px;padding:4px 2px 2px;">
       <div style="font-size:13px;font-weight:600;color:${accent};margin-bottom:6px;">${escapeHtml(title)}</div>
       ${content}
     </div>
@@ -132,16 +146,82 @@ function loadGoogleMaps(apiKey) {
   return mapsLoaderPromise;
 }
 
+function FilterChip({ active, label, count, color, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: active ? `${color}22` : 'rgba(255,255,255,.03)',
+        border: `1px solid ${active ? `${color}55` : C.border}`,
+        borderRadius: 999,
+        color: active ? color : C.muted,
+        padding: '7px 10px',
+        fontSize: 11,
+        cursor: 'pointer',
+      }}
+    >
+      {label} ({count})
+    </button>
+  );
+}
+
+function MiniStat({ label, value, color }) {
+  return (
+    <div style={{ background: 'rgba(255,255,255,.03)', border: `1px solid ${C.border}`, borderRadius: 10, padding: '10px 11px' }}>
+      <div style={{ fontSize: 17, fontWeight: 600, color }}>{value}</div>
+      <div style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2 }}>{label}</div>
+    </div>
+  );
+}
+
 function MapState({ title, body, tone = 'muted' }) {
   const iconColor = tone === 'error' ? C.error : tone === 'success' ? C.green : C.orange;
 
   return (
-    <div style={{ background: C.dark, borderRadius: 10, height: 420, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${C.border}`, flexDirection: 'column', gap: 8, padding: 24, textAlign: 'center' }}>
-      <div style={{ fontSize: 32, color: iconColor }}>M</div>
+    <div style={{ background: C.dark, borderRadius: 10, height: 460, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${C.border}`, flexDirection: 'column', gap: 8, padding: 24, textAlign: 'center' }}>
+      <div style={{ fontSize: 32, color: iconColor }}>MAP</div>
       <div style={{ fontSize: 14, color: C.text, fontWeight: 500 }}>{title}</div>
-      <div style={{ fontSize: 11, color: C.muted, maxWidth: 280, lineHeight: 1.5 }}>{body}</div>
+      <div style={{ fontSize: 11, color: C.muted, maxWidth: 300, lineHeight: 1.6 }}>{body}</div>
     </div>
   );
+}
+
+function fitMapToData(map, google, jobs, providers) {
+  const bounds = new google.maps.LatLngBounds();
+  let pointCount = 0;
+
+  jobs.forEach((job) => {
+    const location = getJobLocation(job);
+    if (!location) return;
+    bounds.extend(location);
+    pointCount += 1;
+
+    const providerLocation = normalizeCoordinate(job.providerLat, job.providerLng);
+    if (!providerLocation) return;
+    bounds.extend(providerLocation);
+    pointCount += 1;
+  });
+
+  providers.forEach((provider) => {
+    const location = getProviderLocation(provider);
+    if (!location) return;
+    bounds.extend(location);
+    pointCount += 1;
+  });
+
+  if (pointCount === 0) {
+    map.setCenter(DEFAULT_CENTER);
+    map.setZoom(DEFAULT_ZOOM);
+    return;
+  }
+
+  if (pointCount === 1) {
+    map.setCenter(bounds.getCenter());
+    map.setZoom(13);
+    return;
+  }
+
+  map.fitBounds(bounds, MAP_PADDING);
 }
 
 export default function MapPage({ jobs, providers, onAIDispatch }) {
@@ -149,13 +229,43 @@ export default function MapPage({ jobs, providers, onAIDispatch }) {
   const mapInstanceRef = useRef(null);
   const infoWindowRef = useRef(null);
   const overlaysRef = useRef([]);
+  const markerRegistryRef = useRef(new Map());
+
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState('');
+  const [showSearchingJobs, setShowSearchingJobs] = useState(true);
+  const [showAssignedJobs, setShowAssignedJobs] = useState(true);
+  const [showAvailableProviders, setShowAvailableProviders] = useState(true);
+  const [showBusyProviders, setShowBusyProviders] = useState(true);
+  const [showOfflineProviders, setShowOfflineProviders] = useState(false);
 
   const mapsKey = process.env.REACT_APP_MAPS_KEY?.trim();
   const activeJobs = jobs.filter(job => !['completed', 'cancelled'].includes(job.status));
+  const visibleJobs = activeJobs
+    .filter((job) => {
+      if (job.status === 'searching') return showSearchingJobs;
+      return showAssignedJobs;
+    })
+    .sort((left, right) => {
+      if (left.status === right.status) return 0;
+      if (left.status === 'searching') return -1;
+      if (right.status === 'searching') return 1;
+      return 0;
+    });
+
   const mappedProviders = providers.filter(provider => getProviderLocation(provider));
-  const trackedProviders = mappedProviders.filter(provider => getProviderDisplayStatus(provider, activeJobs) !== 'offline');
+  const visibleProviders = mappedProviders.filter((provider) => {
+    const displayStatus = getProviderDisplayStatus(provider, activeJobs);
+    if (displayStatus === 'available') return showAvailableProviders;
+    if (displayStatus === 'offline') return showOfflineProviders;
+    return showBusyProviders;
+  });
+
+  const searchingCount = activeJobs.filter(job => job.status === 'searching').length;
+  const assignedJobCount = activeJobs.length - searchingCount;
+  const availableProviderCount = mappedProviders.filter(provider => getProviderDisplayStatus(provider, activeJobs) === 'available').length;
+  const busyProviderCount = mappedProviders.filter(provider => !['available', 'offline'].includes(getProviderDisplayStatus(provider, activeJobs))).length;
+  const offlineProviderCount = mappedProviders.filter(provider => getProviderDisplayStatus(provider, activeJobs) === 'offline').length;
 
   useEffect(() => {
     let cancelled = false;
@@ -208,11 +318,9 @@ export default function MapPage({ jobs, providers, onAIDispatch }) {
 
     overlaysRef.current.forEach(overlay => overlay.setMap(null));
     overlaysRef.current = [];
+    markerRegistryRef.current = new Map();
 
-    const bounds = new google.maps.LatLngBounds();
-    let pointCount = 0;
-
-    activeJobs.forEach((job) => {
+    visibleJobs.forEach((job) => {
       const jobLocation = getJobLocation(job);
       if (!jobLocation) return;
 
@@ -221,14 +329,20 @@ export default function MapPage({ jobs, providers, onAIDispatch }) {
         map,
         position: jobLocation,
         title: `${job.id} ${job.serviceName || job.serviceId || 'Job'}`,
-        icon: createMarkerIcon(google, accent, 10),
+        icon: createMarkerIcon(google, accent, 14),
+        label: {
+          text: getJobMarkerLabel(job.id),
+          color: '#08111D',
+          fontSize: '10px',
+          fontWeight: '700',
+        },
       });
 
       marker.addListener('click', () => {
         infoWindowRef.current?.setContent(renderInfoWindowContent(
-          `${job.id} · ${job.serviceName || job.serviceId || 'Roadside job'}`,
+          `${job.id} - ${job.serviceName || job.serviceId || 'Roadside job'}`,
           [
-            `${job.motoristName || 'Motorist'} · ${String(job.status || '').toUpperCase()}`,
+            `${job.motoristName || 'Motorist'} - ${String(job.status || '').toUpperCase()}`,
             job.address,
             `KES ${Number(job.price || 0).toLocaleString()}`,
             job.providerName ? `Assigned to ${job.providerName}` : 'No provider assigned yet',
@@ -239,8 +353,7 @@ export default function MapPage({ jobs, providers, onAIDispatch }) {
       });
 
       overlaysRef.current.push(marker);
-      bounds.extend(jobLocation);
-      pointCount += 1;
+      markerRegistryRef.current.set(`job:${job.id}`, marker);
 
       const providerLocation = normalizeCoordinate(job.providerLat, job.providerLng);
       if (!providerLocation) return;
@@ -265,11 +378,9 @@ export default function MapPage({ jobs, providers, onAIDispatch }) {
       });
 
       overlaysRef.current.push(assignmentLine);
-      bounds.extend(providerLocation);
-      pointCount += 1;
     });
 
-    mappedProviders.forEach((provider) => {
+    visibleProviders.forEach((provider) => {
       const providerLocation = getProviderLocation(provider);
       if (!providerLocation) return;
 
@@ -279,7 +390,13 @@ export default function MapPage({ jobs, providers, onAIDispatch }) {
         map,
         position: providerLocation,
         title: provider.name || 'Provider',
-        icon: createMarkerIcon(google, accent, 7),
+        icon: createMarkerIcon(google, accent, 10),
+        label: {
+          text: getProviderInitials(provider.name),
+          color: '#08111D',
+          fontSize: '10px',
+          fontWeight: '700',
+        },
       });
 
       marker.addListener('click', () => {
@@ -297,36 +414,61 @@ export default function MapPage({ jobs, providers, onAIDispatch }) {
       });
 
       overlaysRef.current.push(marker);
-      bounds.extend(providerLocation);
-      pointCount += 1;
+      markerRegistryRef.current.set(`provider:${provider.id}`, marker);
     });
 
-    if (pointCount === 0) {
-      map.setCenter(DEFAULT_CENTER);
-      map.setZoom(DEFAULT_ZOOM);
-      return undefined;
-    }
-
-    if (pointCount === 1) {
-      map.setCenter(bounds.getCenter());
-      map.setZoom(13);
-      return undefined;
-    }
-
-    map.fitBounds(bounds, MAP_PADDING);
+    fitMapToData(map, google, visibleJobs, visibleProviders);
     return undefined;
-  }, [activeJobs, mappedProviders, mapReady]);
+  }, [activeJobs, mapReady, visibleJobs, visibleProviders]);
+
+  function refitMap() {
+    const google = window.google;
+    const map = mapInstanceRef.current;
+    if (!mapReady || !google?.maps || !map) return;
+    fitMapToData(map, google, visibleJobs, visibleProviders);
+  }
+
+  function focusJob(jobId) {
+    const google = window.google;
+    const map = mapInstanceRef.current;
+    const marker = markerRegistryRef.current.get(`job:${jobId}`);
+    if (!google?.maps || !map || !marker) return;
+    map.panTo(marker.getPosition());
+    map.setZoom(Math.max(map.getZoom() || DEFAULT_ZOOM, FOCUS_ZOOM));
+    google.maps.event.trigger(marker, 'click');
+  }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: 13 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 13 }}>
       <div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 9 }}>
-          <span style={{ fontSize: 13, fontWeight: 500, color: C.text }}>Live Dispatch Map - Nairobi</span>
-          <span style={{ fontSize: 11, color: C.muted }}>
-            <span style={{ color: C.green }}>●</span> Available &nbsp;
-            <span style={{ color: C.blue }}>●</span> Assigned &nbsp;
-            <span style={{ color: C.orange }}>●</span> Searching
-          </span>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 8, marginBottom: 10 }}>
+          <MiniStat label="Visible Jobs" value={visibleJobs.length} color={C.orange} />
+          <MiniStat label="Searching" value={searchingCount} color={C.orange} />
+          <MiniStat label="Available" value={availableProviderCount} color={C.green} />
+          <MiniStat label="Busy Providers" value={busyProviderCount} color={C.blue} />
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 9 }}>
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 500, color: C.text }}>Live Dispatch Map - Nairobi</div>
+            <div style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>
+              Job markers show the job id. Provider markers show initials.
+            </div>
+          </div>
+          <button
+            onClick={refitMap}
+            style={{ background: 'rgba(255,255,255,.04)', border: `1px solid ${C.border}`, borderRadius: 8, color: C.text, padding: '8px 12px', fontSize: 11, cursor: 'pointer' }}
+          >
+            Refit map
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+          <FilterChip active={showSearchingJobs} label="Searching jobs" count={searchingCount} color={C.orange} onClick={() => setShowSearchingJobs(value => !value)} />
+          <FilterChip active={showAssignedJobs} label="Assigned jobs" count={assignedJobCount} color={C.blue} onClick={() => setShowAssignedJobs(value => !value)} />
+          <FilterChip active={showAvailableProviders} label="Available providers" count={availableProviderCount} color={C.green} onClick={() => setShowAvailableProviders(value => !value)} />
+          <FilterChip active={showBusyProviders} label="Busy providers" count={busyProviderCount} color={C.blue} onClick={() => setShowBusyProviders(value => !value)} />
+          <FilterChip active={showOfflineProviders} label="Offline providers" count={offlineProviderCount} color={C.muted} onClick={() => setShowOfflineProviders(value => !value)} />
         </div>
 
         {!mapsKey && (
@@ -346,36 +488,38 @@ export default function MapPage({ jobs, providers, onAIDispatch }) {
 
         {!!mapsKey && !mapError && (
           <div style={{ background: C.card, borderRadius: 10, border: `1px solid ${C.border}`, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 12px', borderBottom: `1px solid ${C.border}`, background: 'rgba(255,255,255,.03)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 12px', borderBottom: `1px solid ${C.border}`, background: 'rgba(255,255,255,.03)' }}>
               <div style={{ fontSize: 11, color: C.muted }}>
-                {mapReady ? `${activeJobs.length} active jobs · ${trackedProviders.length} tracked providers` : 'Loading live map...'}
+                {mapReady ? `${visibleJobs.length} visible jobs | ${visibleProviders.length} visible providers` : 'Loading live map...'}
               </div>
               <div style={{ fontSize: 11, color: C.green }}>
                 {mapReady ? 'Live' : 'Connecting'}
               </div>
             </div>
-            <div ref={mapContainerRef} style={{ height: 420, width: '100%', background: C.dark }} />
+            <div ref={mapContainerRef} style={{ height: 460, width: '100%', background: C.dark }} />
           </div>
         )}
       </div>
 
-      <div style={{ overflow: 'auto', maxHeight: 470 }}>
+      <div style={{ overflow: 'auto', maxHeight: 620 }}>
         <div style={{ fontSize: 12, fontWeight: 500, color: C.text, marginBottom: 9 }}>
-          Active Jobs ({activeJobs.length})
+          Visible Jobs ({visibleJobs.length})
         </div>
-        {activeJobs.length === 0 && (
-          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '16px 12px', color: C.muted, fontSize: 12 }}>
-            No active jobs right now. Provider markers will still appear on the map when live locations are available.
+
+        {visibleJobs.length === 0 && (
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '16px 12px', color: C.muted, fontSize: 12, marginBottom: 12 }}>
+            No jobs match the current filters.
           </div>
         )}
-        {activeJobs.map(job => (
+
+        {visibleJobs.map(job => (
           <div key={job.id} style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, padding: '11px 12px', marginBottom: 8 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 12, fontWeight: 500, color: C.orange }}>{job.id}</span>
               <Badge label={job.status?.toUpperCase()} color={job.status === 'searching' ? 'orange' : 'blue'} />
             </div>
             <div style={{ fontSize: 12, color: C.text, margin: '3px 0' }}>{job.motoristName}</div>
-            <div style={{ fontSize: 11, color: C.muted }}>Location: {job.address}</div>
+            <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.5 }}>{job.address}</div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11 }}>
               <span style={{ color: C.orange, fontWeight: 500 }}>KES {job.price?.toLocaleString()}</span>
               <span style={{ color: C.muted }}>{job.serviceName || job.serviceId}</span>
@@ -383,11 +527,22 @@ export default function MapPage({ jobs, providers, onAIDispatch }) {
             {job.providerName && (
               <div style={{ fontSize: 11, color: C.blue, marginTop: 6 }}>Assigned: {job.providerName}</div>
             )}
-            {job.status === 'searching' && (
-              <div onClick={() => onAIDispatch(job)} style={{ background: 'rgba(232,99,26,.1)', border: '1px solid rgba(232,99,26,.2)', borderRadius: 7, padding: '6px 10px', fontSize: 11, color: C.orange, cursor: 'pointer', marginTop: 8, textAlign: 'center' }}>
-                AI dispatch recommendation -&gt;
-              </div>
-            )}
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <button
+                onClick={() => focusJob(job.id)}
+                style={{ flex: 1, background: 'rgba(255,255,255,.04)', border: `1px solid ${C.border}`, borderRadius: 7, padding: '7px 10px', fontSize: 11, color: C.text, cursor: 'pointer' }}
+              >
+                Focus on map
+              </button>
+              {job.status === 'searching' && (
+                <button
+                  onClick={() => onAIDispatch(job)}
+                  style={{ flex: 1, background: 'rgba(232,99,26,.1)', border: '1px solid rgba(232,99,26,.2)', borderRadius: 7, padding: '7px 10px', fontSize: 11, color: C.orange, cursor: 'pointer' }}
+                >
+                  Ask AI
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
