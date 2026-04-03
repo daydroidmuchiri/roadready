@@ -51,7 +51,12 @@ export default function AdminApp() {
     const socket = io(api.baseUrl, { auth: { token: api.token() } });
     socket.on('job_updated', job => setJobs(prev => prev.map(j => j.id === job.id ? job : j)));
     socket.on('new_job', job => setJobs(prev => [job, ...prev]));
-    socket.on('provider_location', ({ providerId, location }) => setProviders(prev => prev.map(p => p.id === providerId ? { ...p, location } : p)));
+    socket.on('provider_location', ({ providerId, location }) => setProviders(prev => prev.map(p => (
+      p.id === providerId ? { ...p, lat: location?.lat ?? p.lat, lng: location?.lng ?? p.lng, location } : p
+    ))));
+    socket.on('provider_status', ({ providerId, status }) => setProviders(prev => prev.map(p => (
+      p.id === providerId ? { ...p, status } : p
+    ))));
     socket.on('job_matched', () => api.get('/api/analytics/dashboard').then(setStats).catch(() => {}));
     return () => socket.disconnect();
   }, [adminUser]);
@@ -108,7 +113,7 @@ export default function AdminApp() {
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: 13 }}>
-          {page === 'map' && <MapPage jobs={jobs} onAIDispatch={job => { setPage('ai'); setAIDispatchQ(`Best provider for job ${job.id} - ${job.serviceId} at ${job.address}?`); }} />}
+          {page === 'map' && <MapPage jobs={jobs} providers={providers} onAIDispatch={job => { setPage('ai'); setAIDispatchQ(`Best provider for job ${job.id} - ${job.serviceId} at ${job.address}?`); }} />}
           {page === 'jobs' && <JobsPage jobs={jobs} />}
           {page === 'providers' && <ProvidersPage providers={providers} />}
           {page === 'analytics' && <AnalyticsPage />}
